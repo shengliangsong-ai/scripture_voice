@@ -244,7 +244,8 @@ export function clearAllBibleDataCaches(): void {
 
 /**
  * Loads the full-Bible search index ONLY when the user explicitly invokes full-Bible keyword search.
- * Never called on startup or during book-level navigation.
+ * Assembles entries from split per-book JSONs (cached individually in bookCache and PWA storage),
+ * avoiding any duplicate monolithic index.json file.
  */
 export async function loadFullSearchIndex(): Promise<SearchIndexEntry[]> {
   if (fullIndexCache) return fullIndexCache;
@@ -252,15 +253,23 @@ export async function loadFullSearchIndex(): Promise<SearchIndexEntry[]> {
 
   fullIndexInFlight = (async () => {
     try {
-      const data = await fetchJsonChecked<SearchIndexEntry[]>(
-        '/data/index.json',
-        '/data/index.json'
-      );
-      if (!Array.isArray(data)) {
-        throw new Error('Malformed /data/index.json');
+      const manifest = await loadManifest();
+      if (fullIndexCache) return fullIndexCache;
+
+      const BATCH_SIZE = 10;
+      const allEntries: SearchIndexEntry[] = [];
+      for (let i = 0; i < manifest.books.length; i += BATCH_SIZE) {
+        const batch = manifest.books.slice(i, i + BATCH_SIZE);
+        const results = await Promise.all(
+          batch.map((b) => loadBook(b.bookSlug).catch(() => [] as BibleChapter[]))
+        );
+        for (const bookEntries of results) {
+          allEntries.push(...bookEntries);
+        }
       }
-      fullIndexCache = data;
-      return data;
+
+      fullIndexCache = allEntries;
+      return allEntries;
     } finally {
       fullIndexInFlight = null;
     }

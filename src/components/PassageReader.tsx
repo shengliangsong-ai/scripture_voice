@@ -1,4 +1,5 @@
 import {
+  Bookmark,
   BookMarked,
   Check,
   ChevronLeft,
@@ -6,6 +7,7 @@ import {
   Copy,
   Download,
   FileText,
+  HardDriveDownload,
   Headphones,
   Music,
   Play,
@@ -15,7 +17,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getAdjacentChapter } from '../data/bibleBooks';
 import { getUiStrings } from '../data/uiStrings';
 import { LoadedChapterBundle } from '../services/offlineDataService';
-import { DevotionalLength, NarratorVoice } from '../types/scripture';
+import { DevotionalLength, NarratorVoice, ReaderFontSize } from '../types/scripture';
 import {
   buildPlainTextPassage,
   copyRichPassageToClipboard,
@@ -28,10 +30,29 @@ interface PassageReaderProps {
   devotionalLength: DevotionalLength;
   voice: NarratorVoice;
   highlightVerse?: number;
+  activeSpokenVerse?: number;
+  fontSize: ReaderFontSize;
+  onFontSizeChange: (size: ReaderFontSize) => void;
+  bookmarkedVerses: Set<number>;
+  onToggleBookmarkVerse: (verse: { verse: number; text: string }) => void;
+  onCacheBookOffline: () => Promise<void>;
+  isCachingBook: boolean;
   onNavigateChapter: (bookSlug: string, chapter: number) => void;
   onPlayPodcast: () => void;
   onPlayLyrics: () => void;
 }
+
+const SCRIPTURE_SIZE_CLASSES: Record<ReaderFontSize, string> = {
+  sm: 'text-[15px] leading-[1.75]',
+  md: 'text-[17px] leading-[1.8]',
+  lg: 'text-[19.5px] leading-[1.85]',
+};
+
+const DEVOTIONAL_SIZE_CLASSES: Record<ReaderFontSize, string> = {
+  sm: 'text-[14.5px] leading-[1.75]',
+  md: 'text-[15.5px] leading-[1.8]',
+  lg: 'text-[17.5px] leading-[1.85]',
+};
 
 export function PassageReader({
   bundle,
@@ -39,6 +60,13 @@ export function PassageReader({
   devotionalLength,
   voice,
   highlightVerse,
+  activeSpokenVerse,
+  fontSize,
+  onFontSizeChange,
+  bookmarkedVerses,
+  onToggleBookmarkVerse,
+  onCacheBookOffline,
+  isCachingBook,
   onNavigateChapter,
   onPlayPodcast,
   onPlayLyrics,
@@ -53,6 +81,7 @@ export function PassageReader({
   const printableRef = useRef<HTMLDivElement | null>(null);
   const shareMenuRef = useRef<HTMLDivElement | null>(null);
   const lyricsPanelRef = useRef<HTMLElement | null>(null);
+  const verseRefs = useRef<Record<number, HTMLParagraphElement | null>>({});
 
   const { scripture, devotional, lyrics, artwork } = bundle;
   const ui = getUiStrings(scripture.lang);
@@ -71,6 +100,19 @@ export function PassageReader({
   useEffect(() => {
     setImageError(false);
   }, [artwork?.url, scripture.bookSlug, scripture.chapter]);
+
+  useEffect(() => {
+    if (!activeSpokenVerse) return;
+    const el = verseRefs.current[activeSpokenVerse];
+    if (!el) return;
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    el.scrollIntoView({
+      behavior: prefersReduced ? 'auto' : 'smooth',
+      block: 'center',
+    });
+  }, [activeSpokenVerse]);
 
   useEffect(() => {
     const handleOutside = (e: MouseEvent) => {
@@ -354,6 +396,41 @@ export function PassageReader({
           </figcaption>
         </figure>
 
+        {/* Reader Preferences Bar: Font Size + Offline Book Cache */}
+        <div className="no-print max-w-2xl mx-auto flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div
+            role="group"
+            aria-label={ui.fontSizeAria}
+            className="inline-flex items-center gap-1 p-1 bg-bible-50 border border-bible-200 rounded-lg"
+          >
+            {(['sm', 'md', 'lg'] as ReaderFontSize[]).map((sizeKey) => (
+              <button
+                key={sizeKey}
+                type="button"
+                onClick={() => onFontSizeChange(sizeKey)}
+                aria-pressed={fontSize === sizeKey}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors whitespace-nowrap ${
+                  fontSize === sizeKey
+                    ? 'bg-white text-bible-900 shadow-xs'
+                    : 'text-bible-600 hover:text-bible-900'
+                }`}
+              >
+                {ui.fontSizes[sizeKey]}
+              </button>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            disabled={isCachingBook}
+            onClick={() => void onCacheBookOffline()}
+            className="inline-flex items-center gap-1.5 h-8 px-3 text-xs font-medium text-bible-800 bg-white border border-bible-200 hover:bg-bible-50 disabled:opacity-60 rounded-md transition-colors whitespace-nowrap focus-visible:outline-2 focus-visible:outline-bible-700"
+          >
+            <HardDriveDownload className="w-3.5 h-3.5 text-bible-700" />
+            <span>{isCachingBook ? ui.cachingBookLabel : ui.cacheBookButton}</span>
+          </button>
+        </div>
+
         {/* Styled Scripture Blockquote (subtle top/bottom hairline rules, decorative quotation marks) */}
         <section aria-label="Scripture passage" className="max-w-2xl mx-auto">
           <div className="relative py-8 border-y border-bible-200">
@@ -364,14 +441,23 @@ export function PassageReader({
               “
             </span>
 
-            <blockquote className="space-y-4 font-serif text-[17px] leading-[1.8] text-bible-900">
+            <blockquote className={`space-y-4 font-serif text-bible-900 ${SCRIPTURE_SIZE_CLASSES[fontSize]}`}>
               {scripture.verses.map((v, idx) => {
-                const isHighlighted = highlightVerse === v.verse;
+                const isSearchHit = highlightVerse === v.verse;
+                const isSpoken = activeSpokenVerse === v.verse;
+                const isBookmarked = bookmarkedVerses.has(v.verse);
                 return (
                   <p
                     key={v.verse}
-                    className={`rounded px-1.5 py-0.5 transition-colors ${
-                      isHighlighted ? 'bg-bible-100' : ''
+                    ref={(el) => {
+                      verseRefs.current[v.verse] = el;
+                    }}
+                    className={`group relative rounded px-2 py-1 pr-9 transition-colors ${
+                      isSpoken
+                        ? 'bg-bible-100 ring-1 ring-bible-300'
+                        : isSearchHit
+                        ? 'bg-bible-100'
+                        : 'hover:bg-bible-50/70'
                     } ${
                       idx === 0
                         ? 'first-letter:text-4xl first-letter:font-display first-letter:font-bold first-letter:float-left first-letter:mr-2.5 first-letter:mt-1 first-letter:text-bible-800'
@@ -382,6 +468,21 @@ export function PassageReader({
                       {v.verse}
                     </sup>
                     <span>{v.text}</span>
+                    <button
+                      type="button"
+                      onClick={() => onToggleBookmarkVerse(v)}
+                      aria-label={ui.bookmarkVerseAria(v.verse, isBookmarked)}
+                      aria-pressed={isBookmarked}
+                      className={`no-print absolute right-1.5 top-1.5 inline-flex items-center justify-center w-7 h-7 rounded transition-opacity focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-bible-700 ${
+                        isBookmarked
+                          ? 'opacity-100 text-bible-800 hover:bg-bible-100'
+                          : 'opacity-40 sm:opacity-0 group-hover:opacity-100 text-bible-400 hover:text-bible-800 hover:bg-bible-100'
+                      }`}
+                    >
+                      <Bookmark
+                        className={`w-3.5 h-3.5 ${isBookmarked ? 'fill-current' : ''}`}
+                      />
+                    </button>
                   </p>
                 );
               })}
@@ -407,7 +508,7 @@ export function PassageReader({
             </h2>
           </div>
 
-          <div className="space-y-6 font-serif text-[15.5px] leading-[1.8] text-bible-800">
+          <div className={`space-y-6 font-serif text-bible-800 ${DEVOTIONAL_SIZE_CLASSES[fontSize]}`}>
             <div className="space-y-2">
               <h3 className="font-sans text-xs font-semibold uppercase tracking-wider text-bible-700">
                 {ui.historicalBackground}

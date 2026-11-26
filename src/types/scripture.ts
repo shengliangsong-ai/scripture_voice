@@ -72,6 +72,8 @@ export interface SongLyrics {
   bridge: string[];
 }
 
+export type ReaderFontSize = 'sm' | 'md' | 'lg';
+
 export interface AudioSegment {
   part: number;
   totalParts: number;
@@ -82,6 +84,7 @@ export interface AudioSegment {
   bcp47: string;
   lang: SupportedLang;
   spokenLines: string[];
+  spokenVerseNumbers?: Array<number | undefined>;
 }
 
 export interface SearchIndexEntry {
@@ -136,4 +139,15 @@ export interface ReadingHistoryItem {
   reference: string;
   lang: SupportedLang;
   visitedAt: number;
+}
+
+export interface VerseBookmark {
+  id: string;
+  bookSlug: string;
+  chapter: number;
+  verse: number;
+  reference: string;
+  text: string;
+  lang: SupportedLang;
+  savedAt: number;
 }

@@ -27,7 +27,7 @@ export default defineConfig(() => {
           name: 'Scripture Voice',
           short_name: 'Scripture',
           description:
-            'An offline-capable multi-language Bible audio podcast, study, and devotional reader powered by local scripture text and pre-generated static assets.',
+            'An offline-capable Bible audio, study, and devotional reader powered by local scripture JSON and on-device OS voice synthesis.',
           theme_color: '#fdf8f6',
           background_color: '#FAFAF9',
           display: 'standalone',
@@ -72,20 +72,6 @@ export default defineConfig(() => {
                 cacheName: 'scripture-books-cache',
                 expiration: {
                   maxEntries: 100,
-                  maxAgeSeconds: 60 * 60 * 24 * 90,
-                },
-                cacheableResponse: {
-                  statuses: [0, 200],
-                },
-              },
-            },
-            {
-              urlPattern: /\/data\/index\.json$/i,
-              handler: 'StaleWhileRevalidate',
-              options: {
-                cacheName: 'scripture-search-index-cache',
-                expiration: {
-                  maxEntries: 2,
                   maxAgeSeconds: 60 * 60 * 24 * 90,
                 },
                 cacheableResponse: {

@@ -117,6 +117,19 @@ export interface UiStrings {
   playingPartProgress: (part: number, total: number, label: string) => string;
   audioFallbackError: string;
   audioSynthUnavailable: (bcp47: string) => string;
+  voicePickerAuto: string;
+  voicePickerAria: string;
+  fontSizeAria: string;
+  fontSizes: Record<'sm' | 'md' | 'lg', string>;
+  cacheBookButton: string;
+  cachingBookLabel: string;
+  bookCachedNotice: (bookName: string, count: number) => string;
+  bookmarkVerseAria: (verse: number, saved: boolean) => string;
+  historyTab: string;
+  bookmarksTab: string;
+  emptyBookmarks: string;
+  clearBookmarksAria: string;
+  removeBookmarkAria: string;
   historyTitle: string;
   emptyHistory: string;
   clearHistoryAria: string;
@@ -169,7 +182,7 @@ const EN_STRINGS: UiStrings = {
   filterAll: 'All',
   filterOld: 'Old',
   filterNew: 'New',
-  sidebarFooterHint: 'Underlined chapters include full pre-generated audio, artwork, and multi-length devotionals.',
+  sidebarFooterHint: 'Underlined chapters include full pre-generated scripture, artwork, lyrics, and multi-length devotionals.',
   noMatchingBooks: (filter) => `No books match "${filter}".`,
   featuredChapterTooltip: (ref, isFeatured) =>
     isFeatured ? `${ref} (Full pre-generated bundle)` : ref,
@@ -243,7 +256,24 @@ const EN_STRINGS: UiStrings = {
   playingPartProgress: (part, total, label) => `Playing part ${part} / ${total} · ${label}`,
   audioFallbackError: 'Unable to load fallback audio segment.',
   audioSynthUnavailable: (bcp47) => `Voice synthesis unavailable for ${bcp47} in this browser.`,
-  historyTitle: 'Reading History',
+  voicePickerAuto: 'Auto (Best OS Voice)',
+  voicePickerAria: 'Select device voice',
+  fontSizeAria: 'Reading text size',
+  fontSizes: {
+    sm: 'Compact',
+    md: 'Standard',
+    lg: 'Large',
+  },
+  cacheBookButton: 'Save Book Offline',
+  cachingBookLabel: 'Saving…',
+  bookCachedNotice: (bookName, count) => `Cached ${count} chapter(s) of ${bookName} for offline reading.`,
+  bookmarkVerseAria: (verse, saved) => (saved ? `Remove bookmark for verse ${verse}` : `Bookmark verse ${verse}`),
+  historyTab: 'History',
+  bookmarksTab: 'Bookmarks',
+  emptyBookmarks: 'Click the bookmark icon next to any verse to save favorite passages privately in your browser.',
+  clearBookmarksAria: 'Clear all bookmarks',
+  removeBookmarkAria: 'Remove bookmark',
+  historyTitle: 'Study Library',
   emptyHistory: 'Your local reading history will appear here as you explore chapters. Saved privately in your browser.',
   clearHistoryAria: 'Clear reading history',
   closeHistoryAria: 'Close history drawer',
@@ -322,9 +352,9 @@ const EN_STRINGS: UiStrings = {
     historicalBackground: (bookName, bookId, testament) =>
       `${bookName} is Book ${bookId} of the 66-book biblical canon (${testament}). Full offline commentary is generated at build time via scripts/pregenerate.ts.`,
     theologicalContext: () =>
-      'Pre-seeded flagship chapters with complete translations, devotionals, artwork, and audio include Genesis 1, Psalm 23, Psalm 91, Proverbs 3, Isaiah 40, Matthew 5, John 3, Romans 8, 1 Corinthians 13, and Philippians 4.',
+      'Pre-seeded flagship chapters with complete translations, devotionals, artwork, and worship lyrics include Genesis 1, Psalm 23, Psalm 91, Proverbs 3, Isaiah 40, Matthew 5, John 3, Romans 8, 1 Corinthians 13, and Philippians 4.',
     practicalApplication: (ref) =>
-      `Run the offline pre-generation script to build static JSON, TF-IDF search tokens, and multi-part audio playlists for ${ref}. Zero runtime AI or network APIs are used.`,
+      `Run the offline pre-generation script to build static JSON and TF-IDF search tokens for ${ref}. Audio plays live through your device's built-in speech engine with zero runtime AI or network APIs.`,
     reflectionPrayer: (ref) =>
       `Lord, grant us quiet attentiveness as we study ${ref} and walk in the truth of your word. Amen.`,
     songTitle: (ref) => `Meditation on ${ref}`,
@@ -364,7 +394,7 @@ const ZH_TW_STRINGS: UiStrings = {
   filterAll: '全部',
   filterOld: '舊約',
   filterNew: '新約',
-  sidebarFooterHint: '標有底線的章節包含完整預先產生的多語言經文、靈修解析、詩歌與語音。',
+  sidebarFooterHint: '標有底線的章節包含完整預先產生的多語言經文、靈修解析、詩歌與插畫。',
   noMatchingBooks: (filter) => `找不到符合「${filter}」的書卷。`,
   featuredChapterTooltip: (ref, isFeatured) => (isFeatured ? `${ref}（完整預製離線章節）` : ref),
   searchPlaceholder: '搜尋經文、主題或章節（例如：約翰福音 3:16、焦慮中的安慰）...',
@@ -437,7 +467,24 @@ const ZH_TW_STRINGS: UiStrings = {
   playingPartProgress: (part, total, label) => `正在播放第 ${part}/${total} 段 · ${label}`,
   audioFallbackError: '無法載入備用語音音檔。',
   audioSynthUnavailable: (bcp47) => `此瀏覽器尚未安裝 ${bcp47} 語音合成聲線。`,
-  historyTitle: '閱讀紀錄',
+  voicePickerAuto: '自動（最佳系統聲線）',
+  voicePickerAria: '選擇裝置語音',
+  fontSizeAria: '閱讀字體大小',
+  fontSizes: {
+    sm: '小',
+    md: '標準',
+    lg: '大',
+  },
+  cacheBookButton: '離線快取本卷',
+  cachingBookLabel: '快取中…',
+  bookCachedNotice: (bookName, count) => `已將 ${bookName} 的 ${count} 個章節快取至離線儲存區。`,
+  bookmarkVerseAria: (verse, saved) => (saved ? `取消第 ${verse} 節書籤` : `收藏第 ${verse} 節經文`),
+  historyTab: '閱讀紀錄',
+  bookmarksTab: '經文書籤',
+  emptyBookmarks: '點擊任意經節旁的書籤圖示，即可在瀏覽器本機私密收藏喜愛的經文。',
+  clearBookmarksAria: '清除所有書籤',
+  removeBookmarkAria: '移除書籤',
+  historyTitle: '研經紀錄與書籤',
   emptyHistory: '瀏覽過的章節將會儲存在您的瀏覽器本地紀錄中，完全離線私密保存。',
   clearHistoryAria: '清除閱讀紀錄',
   closeHistoryAria: '關閉閱讀紀錄',
@@ -558,7 +605,7 @@ const ZH_CN_STRINGS: UiStrings = {
   filterAll: '全部',
   filterOld: '旧约',
   filterNew: '新约',
-  sidebarFooterHint: '标有下划线的章节包含完整预先生成的多语言经文、灵修解析、诗歌与语音。',
+  sidebarFooterHint: '标有下划线的章节包含完整预先生成的多语言经文、灵修解析、诗歌与插画。',
   noMatchingBooks: (filter) => `找不到符合「${filter}」的书卷。`,
   featuredChapterTooltip: (ref, isFeatured) => (isFeatured ? `${ref}（完整预制离线章节）` : ref),
   searchPlaceholder: '搜索经文、主题或章节（例如：约翰福音 3:16、焦虑中的安慰）...',
@@ -631,7 +678,24 @@ const ZH_CN_STRINGS: UiStrings = {
   playingPartProgress: (part, total, label) => `正在播放第 ${part}/${total} 段 · ${label}`,
   audioFallbackError: '无法载入备用语音音频。',
   audioSynthUnavailable: (bcp47) => `此浏览器尚未安装 ${bcp47} 语音合成声线。`,
-  historyTitle: '阅读记录',
+  voicePickerAuto: '自动（最佳系统声线）',
+  voicePickerAria: '选择设备语音',
+  fontSizeAria: '阅读字体大小',
+  fontSizes: {
+    sm: '小',
+    md: '标准',
+    lg: '大',
+  },
+  cacheBookButton: '离线缓存本卷',
+  cachingBookLabel: '缓存中…',
+  bookCachedNotice: (bookName, count) => `已将 ${bookName} 的 ${count} 个章节缓存至离线存储。`,
+  bookmarkVerseAria: (verse, saved) => (saved ? `取消第 ${verse} 节书签` : `收藏第 ${verse} 节经文`),
+  historyTab: '阅读记录',
+  bookmarksTab: '经文书签',
+  emptyBookmarks: '点击任意经节旁的书签图标，即可在浏览器本地私密收藏喜爱的经文。',
+  clearBookmarksAria: '清除所有书签',
+  removeBookmarkAria: '移除书签',
+  historyTitle: '研经记录与书签',
   emptyHistory: '浏览过的章节将会保存在您的浏览器本地记录中，完全离线私密保存。',
   clearHistoryAria: '清除阅读记录',
   closeHistoryAria: '关闭阅读记录',

@@ -23,22 +23,27 @@ import {
   bibleDataService,
   getAvailableLanguagesFromManifest,
   loadChapterBundle,
+  precacheBookChapters,
 } from './services/offlineDataService';
 import {
   AudioSegment,
   DevotionalLength,
   NarratorVoice,
+  ReaderFontSize,
   ReadingHistoryItem,
   SupportedLang,
+  VerseBookmark,
 } from './types/scripture';
 
 const HISTORY_STORAGE_KEY = 'scripture_voice_history_v1';
+const BOOKMARKS_STORAGE_KEY = 'scripture_voice_bookmarks_v1';
 const PREFS_STORAGE_KEY = 'scripture_voice_prefs_v1';
 
 interface StoredPrefs {
   lang?: SupportedLang;
   devotionalLength?: DevotionalLength;
   voice?: NarratorVoice;
+  fontSize?: ReaderFontSize;
 }
 
 function readStoredPrefs(): StoredPrefs {
@@ -78,6 +83,17 @@ function readStoredHistory(): ReadingHistoryItem[] {
   }
 }
 
+function readStoredBookmarks(): VerseBookmark[] {
+  try {
+    const raw = localStorage.getItem(BOOKMARKS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 export default function App() {
   const [initialPrefs] = useState<StoredPrefs>(() => readStoredPrefs());
   const [availableLangs, setAvailableLangs] = useState<SupportedLang[]>(DEFAULT_UI_LANGS);
@@ -91,6 +107,11 @@ export default function App() {
   );
   const [voice, setVoice] = useState<NarratorVoice>(() =>
     NARRATOR_VOICES.some((v) => v.name === initialPrefs.voice) ? initialPrefs.voice! : 'Fenrir'
+  );
+  const [fontSize, setFontSize] = useState<ReaderFontSize>(() =>
+    initialPrefs.fontSize === 'sm' || initialPrefs.fontSize === 'md' || initialPrefs.fontSize === 'lg'
+      ? initialPrefs.fontSize
+      : 'md'
   );
 
   useEffect(() => {
@@ -121,19 +142,21 @@ export default function App() {
     try {
       localStorage.setItem(
         PREFS_STORAGE_KEY,
-        JSON.stringify({ lang, devotionalLength, voice })
+        JSON.stringify({ lang, devotionalLength, voice, fontSize })
       );
     } catch {
       // Ignore storage quota errors
     }
-  }, [lang, devotionalLength, voice]);
+  }, [lang, devotionalLength, voice, fontSize]);
 
   const [activeBookSlug, setActiveBookSlug] = useState<string>('psalm');
   const [activeChapter, setActiveChapter] = useState<number>(23);
   const [highlightVerse, setHighlightVerse] = useState<number | undefined>(undefined);
+  const [spokenVerse, setSpokenVerse] = useState<number | undefined>(undefined);
 
   const [bundle, setBundle] = useState<LoadedChapterBundle | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isCachingBook, setIsCachingBook] = useState<boolean>(false);
   const [loadError, setLoadError] = useState<boolean>(false);
   const [reloadNonce, setReloadNonce] = useState<number>(0);
 
@@ -143,6 +166,7 @@ export default function App() {
   const [isHowItWorksOpen, setIsHowItWorksOpen] = useState<boolean>(false);
 
   const [history, setHistory] = useState<ReadingHistoryItem[]>(() => readStoredHistory());
+  const [bookmarks, setBookmarks] = useState<VerseBookmark[]>(() => readStoredBookmarks());
 
   const [activeAudio, setActiveAudio] = useState<{
     title: string;
@@ -238,7 +262,12 @@ export default function App() {
           : `${loadedBundle.scripture.bookName}, chapter ${loadedBundle.scripture.chapter}.`;
 
       const p1 = [intro, ...verses.slice(0, mid).map((v) => v.text)];
+      const p1Verses: Array<number | undefined> = [
+        undefined,
+        ...verses.slice(0, mid).map((v) => v.verse),
+      ];
       const p2 = verses.slice(mid).map((v) => v.text);
+      const p2Verses: Array<number | undefined> = verses.slice(mid).map((v) => v.verse);
       const p3 = [
         dev.title,
         ...splitSentences(dev.historicalBackground),
@@ -249,7 +278,14 @@ export default function App() {
         ...splitSentences(dev.reflectionPrayer),
       ];
       const ui = getUiStrings(activeLang);
-      const linesByPart = [p1, p2.length > 0 ? p2 : p1, p3, p4];
+      const hasP2 = p2.length > 0;
+      const linesByPart = [p1, hasP2 ? p2 : p1, p3, p4];
+      const verseNumsByPart: Array<Array<number | undefined> | undefined> = [
+        p1Verses,
+        hasP2 ? p2Verses : p1Verses,
+        undefined,
+        undefined,
+      ];
       const labels = [
         ui.scripturePartLabel(1, primaryVoice),
         ui.scripturePartLabel(2, primaryVoice),
@@ -274,6 +310,7 @@ export default function App() {
           bcp47: langOpt.bcp47,
           lang: activeLang,
           spokenLines: lines,
+          spokenVerseNumbers: verseNumsByPart[idx],
         };
       });
     },
@@ -324,6 +361,7 @@ export default function App() {
     setActiveBookSlug(bookSlug);
     setActiveChapter(chapter);
     setHighlightVerse(verse);
+    setSpokenVerse(undefined);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -376,6 +414,65 @@ export default function App() {
       // Ignore
     }
   };
+
+  const persistBookmarks = (next: VerseBookmark[]) => {
+    setBookmarks(next);
+    try {
+      localStorage.setItem(BOOKMARKS_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Ignore
+    }
+  };
+
+  const handleToggleBookmarkVerse = (v: { verse: number; text: string }) => {
+    const id = `${activeBookSlug}_${activeChapter}_${v.verse}_${lang}`;
+    const existing = bookmarks.some((b) => b.id === id);
+    if (existing) {
+      persistBookmarks(bookmarks.filter((b) => b.id !== id));
+      return;
+    }
+    const book = getBookBySlug(activeBookSlug);
+    const ref = `${book ? getBookName(book, lang) : activeBookSlug} ${activeChapter}:${v.verse}`;
+    const item: VerseBookmark = {
+      id,
+      bookSlug: activeBookSlug,
+      chapter: activeChapter,
+      verse: v.verse,
+      reference: ref,
+      text: v.text,
+      lang,
+      savedAt: Date.now(),
+    };
+    persistBookmarks([item, ...bookmarks].slice(0, 100));
+  };
+
+  const handleRemoveBookmark = (id: string) => {
+    persistBookmarks(bookmarks.filter((b) => b.id !== id));
+  };
+
+  const handleClearBookmarks = () => {
+    persistBookmarks([]);
+  };
+
+  const handleCacheBookOffline = async () => {
+    if (isCachingBook) return;
+    setIsCachingBook(true);
+    setAudioNotice(null);
+    try {
+      const cachedCount = await precacheBookChapters(activeBookSlug, lang);
+      const book = getBookBySlug(activeBookSlug);
+      const bookName = book ? getBookName(book, lang) : activeBookSlug;
+      setAudioNotice(getUiStrings(lang).bookCachedNotice(bookName, cachedCount));
+    } finally {
+      setIsCachingBook(false);
+    }
+  };
+
+  const activeBookmarkedVerses = new Set(
+    bookmarks
+      .filter((b) => b.bookSlug === activeBookSlug && b.chapter === activeChapter && b.lang === lang)
+      .map((b) => b.verse)
+  );
 
   const ui = getUiStrings(lang);
 
@@ -486,6 +583,13 @@ export default function App() {
                 devotionalLength={devotionalLength}
                 voice={voice}
                 highlightVerse={highlightVerse}
+                activeSpokenVerse={spokenVerse}
+                fontSize={fontSize}
+                onFontSizeChange={setFontSize}
+                bookmarkedVerses={activeBookmarkedVerses}
+                onToggleBookmarkVerse={handleToggleBookmarkVerse}
+                onCacheBookOffline={handleCacheBookOffline}
+                isCachingBook={isCachingBook}
                 onNavigateChapter={(slug, ch) => navigateToChapter(slug, ch)}
                 onPlayPodcast={() => void handlePlayPodcast()}
                 onPlayLyrics={() => void handlePlayLyrics()}
@@ -509,7 +613,11 @@ export default function App() {
           lang={lang}
           title={activeAudio.title}
           segments={activeAudio.segments}
-          onClose={() => setActiveAudio(null)}
+          onClose={() => {
+            setActiveAudio(null);
+            setSpokenVerse(undefined);
+          }}
+          onActiveVerseChange={setSpokenVerse}
         />
       )}
 
@@ -517,12 +625,19 @@ export default function App() {
         lang={lang}
         isOpen={isHistoryOpen}
         items={history}
+        bookmarks={bookmarks}
         onClose={() => setIsHistoryOpen(false)}
         onSelect={(item) => {
           setLang(item.lang);
           navigateToChapter(item.bookSlug, item.chapter);
         }}
+        onSelectBookmark={(bm) => {
+          setLang(bm.lang);
+          navigateToChapter(bm.bookSlug, bm.chapter, bm.verse);
+        }}
+        onRemoveBookmark={handleRemoveBookmark}
         onClear={handleClearHistory}
+        onClearBookmarks={handleClearBookmarks}
       />
 
       <HowItWorksModal

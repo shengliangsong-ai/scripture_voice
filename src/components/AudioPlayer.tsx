@@ -8,6 +8,7 @@ interface AudioPlayerProps {
   title: string;
   segments: AudioSegment[];
   onClose: () => void;
+  onActiveVerseChange?: (verse: number | undefined) => void;
 }
 
 function formatTime(seconds: number): string {
@@ -60,94 +61,144 @@ function getVoiceTuning(voiceName: NarratorVoice): {
   }
 }
 
-function pickHumanFriendlyVoice(
-  availableVoices: SpeechSynthesisVoice[],
-  bcp47: string,
-  narrator: NarratorVoice
-): SpeechSynthesisVoice | null {
-  if (!availableVoices || availableVoices.length === 0) return null;
+const OS_VOICE_STORAGE_KEY = 'scripture_voice_os_voice_v1';
 
+function readSavedOsVoices(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(OS_VOICE_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {};
+  } catch {
+    return {};
+  }
+}
+
+function getMatchingLanguageVoices(
+  availableVoices: SpeechSynthesisVoice[],
+  bcp47: string
+): SpeechSynthesisVoice[] {
+  if (!availableVoices || availableVoices.length === 0) return [];
   const targetLower = bcp47.toLowerCase();
   const langPrefix = targetLower.split('-')[0];
-
-  // Match exact locale first (e.g. zh-TW vs zh-CN, en-US), then language prefix
   const exactMatches = availableVoices.filter(
     (v) => v.lang.toLowerCase().replace('_', '-') === targetLower
   );
   const prefixMatches = availableVoices.filter((v) =>
     v.lang.toLowerCase().replace('_', '-').startsWith(langPrefix)
   );
-
-  const pool = exactMatches.length > 0 ? exactMatches : prefixMatches;
-  if (pool.length === 0) return null;
-
-  const { preferFemale } = getVoiceTuning(narrator);
-
-  const scoreVoice = (v: SpeechSynthesisVoice): number => {
-    const name = v.name.toLowerCase();
-    let score = 0;
-
-    if (v.lang.toLowerCase().replace('_', '-') === targetLower) score += 40;
-    if (!v.localService) score += 10; // Cloud/enhanced neural voices when available in Chrome/Edge
-    if (
-      name.includes('natural') ||
-      name.includes('neural') ||
-      name.includes('google') ||
-      name.includes('microsoft') ||
-      name.includes('siri') ||
-      name.includes('enhanced') ||
-      name.includes('premium')
-    ) {
-      score += 25;
-    }
-
-    // Popular high-clarity OS voices for Chinese and English
-    if (
-      name.includes('xiaoxiao') ||
-      name.includes('yunxi') ||
-      name.includes('mei-jia') ||
-      name.includes('ting-ting') ||
-      name.includes('hsiaochen') ||
-      name.includes('yunjhe') ||
-      name.includes('samantha') ||
-      name.includes('daniel') ||
-      name.includes('aria') ||
-      name.includes('guy') ||
-      name.includes('jenny')
-    ) {
-      score += 20;
-    }
-
-    const looksFemale =
-      name.includes('female') ||
-      name.includes('xiaoxiao') ||
-      name.includes('mei-jia') ||
-      name.includes('ting-ting') ||
-      name.includes('hsiaochen') ||
-      name.includes('samantha') ||
-      name.includes('aria') ||
-      name.includes('jenny') ||
-      name.includes('karen') ||
-      name.includes('ava');
-
-    const looksMale =
-      name.includes('male') ||
-      name.includes('yunxi') ||
-      name.includes('yunjhe') ||
-      name.includes('daniel') ||
-      name.includes('guy') ||
-      name.includes('alex');
-
-    if (preferFemale && looksFemale) score += 8;
-    if (!preferFemale && looksMale) score += 8;
-
-    return score;
-  };
-
-  return [...pool].sort((a, b) => scoreVoice(b) - scoreVoice(a))[0] ?? pool[0];
+  return exactMatches.length > 0 ? exactMatches : prefixMatches;
 }
 
-export function AudioPlayer({ lang, title, segments, onClose }: AudioPlayerProps) {
+function scoreOsVoice(v: SpeechSynthesisVoice, bcp47: string, narrator: NarratorVoice): number {
+  const targetLower = bcp47.toLowerCase();
+  const { preferFemale } = getVoiceTuning(narrator);
+  const name = v.name.toLowerCase();
+  let score = 0;
+
+  if (v.lang.toLowerCase().replace('_', '-') === targetLower) score += 40;
+  if (!v.localService) score += 10;
+  if (
+    name.includes('natural') ||
+    name.includes('neural') ||
+    name.includes('google') ||
+    name.includes('microsoft') ||
+    name.includes('siri') ||
+    name.includes('enhanced') ||
+    name.includes('premium')
+  ) {
+    score += 25;
+  }
+  if (
+    name.includes('xiaoxiao') ||
+    name.includes('yunxi') ||
+    name.includes('mei-jia') ||
+    name.includes('ting-ting') ||
+    name.includes('hsiaochen') ||
+    name.includes('yunjhe') ||
+    name.includes('samantha') ||
+    name.includes('daniel') ||
+    name.includes('aria') ||
+    name.includes('guy') ||
+    name.includes('jenny')
+  ) {
+    score += 20;
+  }
+
+  const looksFemale =
+    name.includes('female') ||
+    name.includes('xiaoxiao') ||
+    name.includes('mei-jia') ||
+    name.includes('ting-ting') ||
+    name.includes('hsiaochen') ||
+    name.includes('samantha') ||
+    name.includes('aria') ||
+    name.includes('jenny') ||
+    name.includes('karen') ||
+    name.includes('ava');
+
+  const looksMale =
+    name.includes('male') ||
+    name.includes('yunxi') ||
+    name.includes('yunjhe') ||
+    name.includes('daniel') ||
+    name.includes('guy') ||
+    name.includes('alex');
+
+  if (preferFemale && looksFemale) score += 8;
+  if (!preferFemale && looksMale) score += 8;
+  return score;
+}
+
+function pickHumanFriendlyVoice(
+  availableVoices: SpeechSynthesisVoice[],
+  bcp47: string,
+  narrator: NarratorVoice,
+  preferredVoiceURI?: string
+): SpeechSynthesisVoice | null {
+  const pool = getMatchingLanguageVoices(availableVoices, bcp47);
+  if (pool.length === 0) return null;
+
+  if (preferredVoiceURI) {
+    const manual = pool.find((v) => v.voiceURI === preferredVoiceURI);
+    if (manual) return manual;
+  }
+
+  return (
+    [...pool].sort((a, b) => scoreOsVoice(b, bcp47, narrator) - scoreOsVoice(a, bcp47, narrator))[0] ??
+    pool[0]
+  );
+}
+
+interface SpokenChunkItem {
+  text: string;
+  verse?: number;
+}
+
+function buildSpokenChunks(seg: AudioSegment | undefined): SpokenChunkItem[] {
+  if (!seg) return [];
+  const isCjk =
+    seg.lang === 'zh' ||
+    seg.lang === 'zh-CN' ||
+    seg.lang === 'ja' ||
+    seg.lang === 'ko';
+  const raw = seg.spokenLines ?? [];
+  const verseNums = seg.spokenVerseNumbers;
+  const chunks: SpokenChunkItem[] = [];
+  raw.forEach((line, idx) => {
+    const verse = verseNums?.[idx];
+    for (const part of splitLongSpokenLine(line, isCjk)) {
+      chunks.push({ text: part, verse });
+    }
+  });
+  return chunks;
+}
+
+export function AudioPlayer({
+  lang,
+  title,
+  segments,
+  onClose,
+  onActiveVerseChange,
+}: AudioPlayerProps) {
   const ui = getUiStrings(lang);
   const supportsSpeech =
     typeof window !== 'undefined' && 'speechSynthesis' in window && typeof SpeechSynthesisUtterance !== 'undefined';
@@ -161,20 +212,25 @@ export function AudioPlayer({ lang, title, segments, onClose }: AudioPlayerProps
   const [availableVoices, setAvailableVoices] = useState<SpeechSynthesisVoice[]>(() =>
     supportsSpeech ? window.speechSynthesis.getVoices() : []
   );
+  const [savedVoiceByLang, setSavedVoiceByLang] = useState<Record<string, string>>(() =>
+    readSavedOsVoices()
+  );
   const [audioError, setAudioError] = useState<string | null>(null);
 
   const activeSegment = segments[activeIndex];
+  const selectedVoiceURI = activeSegment ? savedVoiceByLang[activeSegment.bcp47] ?? '' : '';
 
-  const spokenChunks = useMemo(() => {
-    if (!activeSegment) return [];
-    const isCjk =
-      activeSegment.lang === 'zh' ||
-      activeSegment.lang === 'zh-CN' ||
-      activeSegment.lang === 'ja' ||
-      activeSegment.lang === 'ko';
-    const raw = activeSegment.spokenLines ?? [];
-    return raw.flatMap((line) => splitLongSpokenLine(line, isCjk));
-  }, [activeSegment]);
+  const matchingOsVoices = useMemo(() => {
+    if (!activeSegment || !supportsSpeech) return [];
+    const pool = getMatchingLanguageVoices(availableVoices, activeSegment.bcp47);
+    return [...pool].sort(
+      (a, b) =>
+        scoreOsVoice(b, activeSegment.bcp47, activeSegment.voice) -
+        scoreOsVoice(a, activeSegment.bcp47, activeSegment.voice)
+    );
+  }, [activeSegment, availableVoices, supportsSpeech]);
+
+  const spokenChunks = useMemo(() => buildSpokenChunks(activeSegment), [activeSegment]);
 
   // Listen for async voice list load in Chrome/Safari
   useEffect(() => {
@@ -217,21 +273,20 @@ export function AudioPlayer({ lang, title, segments, onClose }: AudioPlayerProps
       const seg = segments[segIdx];
       if (!seg) return;
 
-      const isCjk =
-        seg.lang === 'zh' || seg.lang === 'zh-CN' || seg.lang === 'ja' || seg.lang === 'ko';
-      const chunks = (seg.spokenLines ?? []).flatMap((l) => splitLongSpokenLine(l, isCjk));
-      const text = chunks[chunkIdx];
-      if (!text) return;
+      const chunks = buildSpokenChunks(seg);
+      const chunkItem = chunks[chunkIdx];
+      if (!chunkItem?.text) return;
 
       const session = ++utteranceSessionRef.current;
       window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(text);
+      const utterance = new SpeechSynthesisUtterance(chunkItem.text);
       utterance.lang = seg.bcp47;
 
       const voicesNow =
         availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
-      const matchedVoice = pickHumanFriendlyVoice(voicesNow, seg.bcp47, seg.voice);
+      const manualURI = savedVoiceByLang[seg.bcp47];
+      const matchedVoice = pickHumanFriendlyVoice(voicesNow, seg.bcp47, seg.voice, manualURI);
       if (matchedVoice) {
         utterance.voice = matchedVoice;
         utterance.lang = matchedVoice.lang || seg.bcp47;
@@ -266,7 +321,7 @@ export function AudioPlayer({ lang, title, segments, onClose }: AudioPlayerProps
 
       window.speechSynthesis.speak(utterance);
     },
-    [supportsSpeech, segments, availableVoices, playbackRate, ui]
+    [supportsSpeech, segments, availableVoices, savedVoiceByLang, playbackRate, ui]
   );
 
   // Drive SpeechSynthesis whenever activeIndex, lineIndex, or isPlaying updates
@@ -285,6 +340,23 @@ export function AudioPlayer({ lang, title, segments, onClose }: AudioPlayerProps
       window.speechSynthesis.cancel();
     }
   }, [supportsSpeech, activeSegment, activeIndex, lineIndex, isPlaying, speakCurrentChunk, ui]);
+
+  // Notify PassageReader which verse is currently being spoken
+  useEffect(() => {
+    if (!onActiveVerseChange) return;
+    if (!isPlaying || !activeSegment || activeSegment.role !== 'scripture') {
+      onActiveVerseChange(undefined);
+      return;
+    }
+    const verse = spokenChunks[lineIndex]?.verse;
+    onActiveVerseChange(verse);
+  }, [isPlaying, activeSegment, spokenChunks, lineIndex, onActiveVerseChange]);
+
+  useEffect(() => {
+    return () => {
+      onActiveVerseChange?.(undefined);
+    };
+  }, [onActiveVerseChange]);
 
   // Register lock-screen / headphone Media Session controls when available
   useEffect(() => {
@@ -327,7 +399,22 @@ export function AudioPlayer({ lang, title, segments, onClose }: AudioPlayerProps
     : 0;
   const estTotal = activeSegment.durationSec;
 
-  const currentSpokenLine = spokenChunks[lineIndex] ?? '';
+  const currentSpokenLine = spokenChunks[lineIndex]?.text ?? '';
+
+  const handleOsVoiceChange = (voiceURI: string) => {
+    const next = { ...savedVoiceByLang };
+    if (voiceURI) {
+      next[activeSegment.bcp47] = voiceURI;
+    } else {
+      delete next[activeSegment.bcp47];
+    }
+    setSavedVoiceByLang(next);
+    try {
+      localStorage.setItem(OS_VOICE_STORAGE_KEY, JSON.stringify(next));
+    } catch {
+      // Ignore storage quota errors
+    }
+  };
 
   const handleTogglePlay = () => {
     setAudioError(null);
@@ -458,8 +545,24 @@ export function AudioPlayer({ lang, title, segments, onClose }: AudioPlayerProps
           </span>
         </div>
 
-        {/* Speed & Close */}
+        {/* OS Voice, Speed & Close */}
         <div className="flex items-center gap-1.5 shrink-0">
+          {supportsSpeech && matchingOsVoices.length > 0 && (
+            <select
+              aria-label={ui.voicePickerAria}
+              value={selectedVoiceURI}
+              onChange={(e) => handleOsVoiceChange(e.target.value)}
+              className="h-8 max-w-[140px] sm:max-w-[175px] px-2 text-[11px] font-medium text-bible-800 bg-bible-50 border border-bible-200 hover:bg-bible-100 rounded-md transition-colors truncate cursor-pointer"
+            >
+              <option value="">{ui.voicePickerAuto}</option>
+              {matchingOsVoices.map((v) => (
+                <option key={v.voiceURI} value={v.voiceURI}>
+                  {v.name} ({v.lang})
+                </option>
+              ))}
+            </select>
+          )}
+
           <button
             type="button"
             onClick={() => {

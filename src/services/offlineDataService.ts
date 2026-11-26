@@ -418,3 +418,32 @@ export async function loadChapterBundle(
   chapterBundleInFlight.set(cacheKey, requestPromise);
   return requestPromise;
 }
+
+export async function precacheBookChapters(
+  bookSlug: string,
+  lang: SupportedLang
+): Promise<number> {
+  const manifest = await loadManifest();
+  const bookEntry = manifest.books.find((b) => b.bookSlug === bookSlug);
+  const chaptersToCache =
+    bookEntry && bookEntry.chapters.length > 0 ? bookEntry.chapters : [1];
+
+  await loadBook(bookSlug).catch(() => []);
+
+  const BATCH_SIZE = 4;
+  let cachedCount = 0;
+  for (let i = 0; i < chaptersToCache.length; i += BATCH_SIZE) {
+    const batch = chaptersToCache.slice(i, i + BATCH_SIZE);
+    const bundles = await Promise.all(
+      batch.map((ch) => loadChapterBundle(bookSlug, ch, lang))
+    );
+    cachedCount += bundles.length;
+  }
+
+  const bookMeta = getBookBySlug(bookSlug);
+  if (bookMeta) {
+    await fetch(`/data/images/books/${encodeURIComponent(bookMeta.slug)}.svg`).catch(() => undefined);
+  }
+
+  return cachedCount;
+}

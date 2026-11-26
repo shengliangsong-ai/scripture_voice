@@ -810,10 +810,31 @@ async function runPregeneration(): Promise<void> {
     }
   }
 
-  // Merge newIndexEntries into existing index.json so --chapters=ezra_2 never erases existing chapters
+  // Merge newIndexEntries into existing books/*.json bundles (or legacy index.json if present)
+  const booksDir = path.join(outRoot, 'books');
+  ensureDir(booksDir);
   const indexPath = path.join(outRoot, 'index.json');
+  const writeLegacyIndex = process.argv.includes('--legacy-index');
   const mergedMap = new Map<string, SearchIndexEntry>();
-  if (fs.existsSync(indexPath)) {
+
+  const existingBookFiles = fs.existsSync(booksDir)
+    ? fs.readdirSync(booksDir).filter((f) => f.endsWith('.json'))
+    : [];
+
+  if (existingBookFiles.length > 0) {
+    for (const file of existingBookFiles) {
+      try {
+        const prev = JSON.parse(
+          fs.readFileSync(path.join(booksDir, file), 'utf8')
+        ) as SearchIndexEntry[];
+        for (const item of prev) {
+          mergedMap.set(item.id, item);
+        }
+      } catch {
+        // Ignore corrupted per-book file
+      }
+    }
+  } else if (fs.existsSync(indexPath)) {
     try {
       const prev = JSON.parse(fs.readFileSync(indexPath, 'utf8')) as SearchIndexEntry[];
       for (const item of prev) {
@@ -853,11 +874,11 @@ async function runPregeneration(): Promise<void> {
       return a.chapter - b.chapter;
     });
 
-  fs.writeFileSync(indexPath, JSON.stringify(finalIndex));
+  if (writeLegacyIndex) {
+    fs.writeFileSync(indexPath, JSON.stringify(finalIndex));
+  }
 
-  // Also emit split per-book JSONs + lightweight books-manifest.json
-  const booksDir = path.join(outRoot, 'books');
-  ensureDir(booksDir);
+  // Emit split per-book JSONs + lightweight books-manifest.json
   const byBook = new Map<string, SearchIndexEntry[]>();
   for (const item of finalIndex) {
     const list = byBook.get(item.bookSlug);
@@ -941,7 +962,7 @@ async function runPregeneration(): Promise<void> {
   fs.writeFileSync(manifestPath, JSON.stringify(mergedManifest, null, 2));
 
   console.log(
-    `[Scripture Voice] Pre-generation complete. Processed ${selectedEntries.length} chapter(s); index.json holds ${finalIndex.length} chapters; split into ${manifestBooks.length} books + books-manifest.json.`
+    `[Scripture Voice] Pre-generation complete. Processed ${selectedEntries.length} chapter(s); ${finalIndex.length} total chapters across ${manifestBooks.length} books + books-manifest.json.`
   );
 }
 
