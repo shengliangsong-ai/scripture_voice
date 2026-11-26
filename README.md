@@ -103,6 +103,26 @@ npm run pregenerate -- --all-canon --langs=en,zh,zh-CN
 npm run pregenerate -- --chapters=ezra_2 --no-crawl
 ```
 
+### Example: Pre-Generate All 66 Books / 1,189 Chapters (English & Chinese Only)
+
+To populate every book and chapter (`bible/`, `devotionals/`, `lyrics/`, and `books/*.json`) in English and Chinese without generating any other languages:
+
+```bash
+# 1. Pre-generate all 66 books / 1,189 chapters in English + Traditional & Simplified Chinese
+npm run pregenerate -- --all-canon --langs=en,zh,zh-CN
+
+# (Optional) Or Simplified Chinese + English only:
+# npm run pregenerate -- --all-canon --langs=en,zh-CN
+
+# 2. Later rebuilds from local cache (scripts/.cache/) without hitting the network:
+npm run pregenerate -- --all-canon --langs=en,zh,zh-CN --no-crawl
+
+# 3. Rebuild the production PWA bundle
+npm run build
+```
+
+This caches the public-domain source archives in `scripts/.cache/` (gitignored) and writes localized scripture, multi-length devotionals (`1`, `3`, `5`, `10`, `15` min), worship lyrics, per-book search indexes (`public/data/books/*.json`), and `public/data/books-manifest.json` across all 1,189 chapters.
+
 Utilities for split indexes and SVG book plates:
 
 ```bash
