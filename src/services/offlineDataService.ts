@@ -8,6 +8,7 @@ import {
 import { getUiStrings } from '../data/uiStrings';
 import {
   BibleBookMeta,
+  BookContentBundle,
   ChapterDevotionalBundle,
   ChapterScripture,
   DevotionalLength,
@@ -51,8 +52,50 @@ export interface SearchOptions {
   bookSlug?: string;
 }
 
+const bookContentCache = new Map<string, BookContentBundle | null>();
+const bookContentInFlight = new Map<string, Promise<BookContentBundle | null>>();
 const chapterBundleCache = new Map<string, LoadedChapterBundle>();
 const chapterBundleInFlight = new Map<string, Promise<LoadedChapterBundle>>();
+
+async function loadBookContent(
+  bookSlug: string,
+  lang: SupportedLang
+): Promise<BookContentBundle | null> {
+  const key = `${lang}:${bookSlug}`;
+  if (bookContentCache.has(key)) {
+    return bookContentCache.get(key) ?? null;
+  }
+
+  const existing = bookContentInFlight.get(key);
+  if (existing) return existing;
+
+  const promise = (async (): Promise<BookContentBundle | null> => {
+    try {
+      const res = await fetch(
+        `/data/content/${encodeURIComponent(lang)}/${encodeURIComponent(bookSlug)}.json`
+      );
+      if (!res.ok) {
+        if (res.status === 404) {
+          bookContentCache.set(key, null);
+        }
+        return null;
+      }
+      const parsed = (await res.json()) as BookContentBundle;
+      if (!parsed || typeof parsed.chapters !== 'object') {
+        return null;
+      }
+      bookContentCache.set(key, parsed);
+      return parsed;
+    } catch {
+      return null;
+    } finally {
+      bookContentInFlight.delete(key);
+    }
+  })();
+
+  bookContentInFlight.set(key, promise);
+  return promise;
+}
 
 export function parseBibleReferenceQuery(
   rawQuery: string
@@ -325,22 +368,38 @@ export async function loadChapterBundle(
       const ui = getUiStrings(lang);
 
       try {
-        const [bibleRes, devRes, lyricsRes] = await Promise.all([
-          fetch(`/data/bible/${lang}/${key}.json`),
-          fetch(`/data/devotionals/${lang}/${key}.json`),
-          fetch(`/data/lyrics/${lang}/${key}.json`),
-        ]);
-
-        if (bibleRes.ok && devRes.ok && lyricsRes.ok) {
-          const [scripture, devotional, lyrics] = await Promise.all([
-            bibleRes.json() as Promise<ChapterScripture>,
-            devRes.json() as Promise<ChapterDevotionalBundle>,
-            lyricsRes.json() as Promise<SongLyrics>,
-          ]);
-
-          const loadedBundle: LoadedChapterBundle = { scripture, devotional, lyrics, artwork };
+        const bookContent = await loadBookContent(bookSlug, lang);
+        const chapterData = bookContent?.chapters?.[String(chapter)];
+        if (chapterData?.scripture && chapterData?.devotional && chapterData?.lyrics) {
+          const loadedBundle: LoadedChapterBundle = {
+            scripture: chapterData.scripture,
+            devotional: chapterData.devotional,
+            lyrics: chapterData.lyrics,
+            artwork,
+          };
           chapterBundleCache.set(cacheKey, loadedBundle);
           return loadedBundle;
+        }
+
+        // Legacy fallback ONLY if per-book content file did not exist
+        if (bookContent === null) {
+          const [bibleRes, devRes, lyricsRes] = await Promise.all([
+            fetch(`/data/bible/${lang}/${key}.json`),
+            fetch(`/data/devotionals/${lang}/${key}.json`),
+            fetch(`/data/lyrics/${lang}/${key}.json`),
+          ]);
+
+          if (bibleRes.ok && devRes.ok && lyricsRes.ok) {
+            const [scripture, devotional, lyrics] = await Promise.all([
+              bibleRes.json() as Promise<ChapterScripture>,
+              devRes.json() as Promise<ChapterDevotionalBundle>,
+              lyricsRes.json() as Promise<SongLyrics>,
+            ]);
+
+            const loadedBundle: LoadedChapterBundle = { scripture, devotional, lyrics, artwork };
+            chapterBundleCache.set(cacheKey, loadedBundle);
+            return loadedBundle;
+          }
         }
       } catch {
         // Fall through to unseeded canonical study sheet
@@ -430,14 +489,29 @@ export async function precacheBookChapters(
 
   await loadBook(bookSlug).catch(() => []);
 
-  const BATCH_SIZE = 4;
+  const bookContent = await loadBookContent(bookSlug, lang);
   let cachedCount = 0;
-  for (let i = 0; i < chaptersToCache.length; i += BATCH_SIZE) {
-    const batch = chaptersToCache.slice(i, i + BATCH_SIZE);
-    const bundles = await Promise.all(
-      batch.map((ch) => loadChapterBundle(bookSlug, ch, lang))
-    );
-    cachedCount += bundles.length;
+
+  if (bookContent) {
+    const artwork = getChapterArtwork(bookSlug, chaptersToCache[0] ?? 1);
+    for (const [chKey, chData] of Object.entries(bookContent.chapters)) {
+      chapterBundleCache.set(`${lang}:${bookSlug}_${chKey}`, {
+        scripture: chData.scripture,
+        devotional: chData.devotional,
+        lyrics: chData.lyrics,
+        artwork,
+      });
+      cachedCount += 1;
+    }
+  } else {
+    const BATCH_SIZE = 4;
+    for (let i = 0; i < chaptersToCache.length; i += BATCH_SIZE) {
+      const batch = chaptersToCache.slice(i, i + BATCH_SIZE);
+      const bundles = await Promise.all(
+        batch.map((ch) => loadChapterBundle(bookSlug, ch, lang))
+      );
+      cachedCount += bundles.length;
+    }
   }
 
   const bookMeta = getBookBySlug(bookSlug);
@@ -445,5 +519,5 @@ export async function precacheBookChapters(
     await fetch(`/data/images/books/${encodeURIComponent(bookMeta.slug)}.svg`).catch(() => undefined);
   }
 
-  return cachedCount;
+  return Math.max(1, cachedCount);
 }

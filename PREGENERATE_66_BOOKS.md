@@ -1,7 +1,7 @@
 # Pre-Generation Commands for All 66 Bible Books
 
 Run any command below from the project root to crawl and compile **all missing chapters** for that specific book into `public/data/` (zero LLM tokens or API keys required).  
-Every run merges cleanly into `public/data/index.json` without erasing other books or chapters.
+Every run merges cleanly into per-book `public/data/content/{lang}/{book}.json`, `public/data/books/{book}.json`, and `public/data/books-manifest.json` without erasing other books or chapters.
 
 > **Tip — Book Number or Slug + Chapter Filter**  
 > You can use either `--book=<slug>` or book number `1`–`66` (`--book=24 chapter=all` for Jeremiah, or `--book=24 chapter=3` for a specific chapter).  

@@ -9,7 +9,8 @@
 - **66-Book Canonical Sidebar**: Browse all Old Testament (`1`–`39`) and New Testament (`40`–`66`) books with **Old** / **New** testament tabs, explicit chapter counts, chapter grids, and localized book names.
 - **Scoped Client-Side BM25 & Voice Search**: Query keywords, themes (`"Comfort in anxiety"`, `"焦慮中的安慰"`), or scripture references (`"John 3:16"`, `"約翰福音 3:16"`) with CJK character/bigram tokenization across either **This Book only** or the **Full Bible** (assembled from split `books/*.json` bundles without a duplicate monolith), plus optional microphone voice search via the browser Web Speech API.
 - **Real-Time OS Voice Synthesis & Follow-Along Highlighting**: Reads localized scripture verses, devotional commentary, and worship lyrics aloud in real time via **`window.speechSynthesis`** matched to the active locale (`en-US`, `zh-TW`, `zh-CN`, etc.)—with a direct **installed OS voice picker**, narrator timbre tuning (`Fenrir`, `Kore`, `Puck`, `Charon`, `Zephyr`), playback speed control (`0.85×`–`1.3×`), live spoken subtitles, lock-screen Media Session controls, and automatic verse-by-verse highlighting & scrolling as audio plays. **Zero pre-generated `.wav`/`.mp3` files are shipped.**
-- **Default English & Chinese (`en`, `zh`, `zh-CN`) + On-Demand Languages**: Ships streamlined with English, Traditional Chinese, and Simplified Chinese (`276` tracked files, `~8.5 MB` working tree), while supporting on-demand generation of 8 additional languages (`es`, `fr`, `de`, `pt`, `it`, `ja`, `ko`, `hi`) via `scripts/pregenerate.ts`.
+- **Default English & Chinese (`en`, `zh`, `zh-CN`) + On-Demand Languages**: Ships streamlined with English, Traditional Chinese, and Simplified Chinese (`~207` tracked files, `~8.4 MB` working tree), while supporting on-demand generation of 8 additional languages (`es`, `fr`, `de`, `pt`, `it`, `ja`, `ko`, `hi`) via `scripts/pregenerate.ts`.
+- **Per-Book Content Bundles (`content/{lang}/{bookSlug}.json`)**: Each book packs scripture, multi-length devotionals, and worship lyrics into a single minified JSON file per language (`66` files per language across all `1,189` chapters—`132` files for `en` + `zh-CN` instead of `7,134` chapter files), cutting chapter navigation inside a book to zero extra requests.
 - **Artwork Plates**: Features 4 flagship classical oil paintings (`Genesis 1`, `Psalm 23`, `1 Corinthians 13`, `John 3` in `src/assets/images/`) plus 66 bespoke archival SVG book plates (`public/data/images/books/{book}.svg`, `145 KB` total).
 - **Study Library, Font Sizing & Installable PWA**: Includes a reader font-size toggle (`Compact` / `Standard` / `Large`), per-verse bookmarks & reading history stored privately in `localStorage`, one-tap **Save Book Offline** precaching via Workbox, iPhone **Add to Home Screen** guidance, clipboard copy, Web Share, and printable PDF study sheets via `html2canvas` and `jspdf`.
 
@@ -36,9 +37,7 @@ scripture_voice/
 │   └── data/
 │       ├── books-manifest.json # Lightweight 7.1 KB manifest of all 66 books & chapter lists
 │       ├── books/              # 66 per-book search & index JSON files (lazy-loaded)
-│       ├── bible/              # Chapter scripture JSON by language (en/, zh/, zh-CN/)
-│       ├── devotionals/        # Multi-length devotional bundles (1/3/5/10/15 min)
-│       ├── lyrics/             # Worship song lyrics per featured chapter
+│       ├── content/            # Per-book bundles: {lang}/{bookSlug}.json (scripture + devotionals + lyrics)
 │       └── images/             # 66 SVG book plates (books/*.svg) + manifest.json
 ├── scripts/
 │   ├── pregenerate.ts          # Public-domain crawler & static JSON bundle compiler
@@ -105,23 +104,53 @@ npm run pregenerate -- --chapters=ezra_2 --no-crawl
 
 ### Example: Pre-Generate All 66 Books / 1,189 Chapters (English & Chinese Only)
 
-To populate every book and chapter (`bible/`, `devotionals/`, `lyrics/`, and `books/*.json`) in English and Chinese without generating any other languages:
+To populate every book and chapter in English and Chinese (`public/data/content/{lang}/{book}.json` — only **66 files per language** instead of thousands of chapter files):
 
 ```bash
 # 1. Pre-generate all 66 books / 1,189 chapters in English + Traditional & Simplified Chinese
 npm run pregenerate -- --all-canon --langs=en,zh,zh-CN
 
-# (Optional) Or Simplified Chinese + English only:
+# (Optional) Or Simplified Chinese + English only (132 content files total):
 # npm run pregenerate -- --all-canon --langs=en,zh-CN
 
 # 2. Later rebuilds from local cache (scripts/.cache/) without hitting the network:
-npm run pregenerate -- --all-canon --langs=en,zh,zh-CN --no-crawl
+npm run pregenerate -- --all-canon --langs=en,zh-CN --no-crawl
 
 # 3. Rebuild the production PWA bundle
 npm run build
 ```
 
-This caches the public-domain source archives in `scripts/.cache/` (gitignored) and writes localized scripture, multi-length devotionals (`1`, `3`, `5`, `10`, `15` min), worship lyrics, per-book search indexes (`public/data/books/*.json`), and `public/data/books-manifest.json` across all 1,189 chapters.
+This caches the public-domain source archives in `scripts/.cache/` (gitignored) and writes localized scripture, multi-length devotionals (`1`, `3`, `5`, `10`, `15` min), worship lyrics into per-book `public/data/content/{lang}/{book}.json` bundles, plus per-book search indexes (`public/data/books/*.json`) and `public/data/books-manifest.json` across all 1,189 chapters.
+
+### Branch Workflow: `chinese`, `english`, and `chinese_english`
+
+Keep `main` lightweight with the default seeded chapters, and build full 1,189-chapter branches cleanly (`scripts/.cache/` stays intact across branch switches, so subsequent branches can use `--no-crawl`):
+
+```bash
+# 1. Chinese-only branch (Simplified Chinese; use --langs=zh,zh-CN to include Traditional)
+git checkout main
+git checkout -b chinese
+rm -rf public/data/content public/data/books
+npm run pregenerate -- --all-canon --langs=zh-CN
+git add public/data && git commit -m "Generate full Chinese canon (66 book bundles)"
+git push -u origin chinese
+
+# 2. English-only branch (reuses local scripts/.cache/ offline with --no-crawl)
+git checkout main
+git checkout -b english
+rm -rf public/data/content public/data/books
+npm run pregenerate -- --all-canon --langs=en --no-crawl
+git add public/data && git commit -m "Generate full English canon (66 book bundles)"
+git push -u origin english
+
+# 3. Combined Chinese + English branch
+git checkout main
+git checkout -b chinese_english
+rm -rf public/data/content public/data/books
+npm run pregenerate -- --all-canon --langs=en,zh-CN --no-crawl
+git add public/data && git commit -m "Generate full English + Chinese canon (132 book bundles)"
+git push -u origin chinese_english
+```
 
 Utilities for split indexes and SVG book plates:
 

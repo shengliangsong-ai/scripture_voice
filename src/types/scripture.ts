@@ -72,6 +72,19 @@ export interface SongLyrics {
   bridge: string[];
 }
 
+export interface ChapterBundleData {
+  scripture: ChapterScripture;
+  devotional: ChapterDevotionalBundle;
+  lyrics: SongLyrics;
+}
+
+export interface BookContentBundle {
+  version: number;
+  bookSlug: string;
+  lang: SupportedLang;
+  chapters: Record<string, ChapterBundleData>;
+}
+
 export type ReaderFontSize = 'sm' | 'md' | 'lg';
 
 export interface AudioSegment {

@@ -80,12 +80,12 @@ export default defineConfig(() => {
               },
             },
             {
-              urlPattern: /\/data\/(bible|devotionals|lyrics)\/.*\.json$/i,
+              urlPattern: /\/data\/(content|bible|devotionals|lyrics)\/.*\.json$/i,
               handler: 'StaleWhileRevalidate',
               options: {
                 cacheName: 'scripture-data-cache',
                 expiration: {
-                  maxEntries: 5000,
+                  maxEntries: 500,
                   maxAgeSeconds: 60 * 60 * 24 * 90,
                 },
                 cacheableResponse: {

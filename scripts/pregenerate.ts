@@ -14,6 +14,8 @@ import {
   BibleManifest,
   BibleManifestBook,
   BibleVerse,
+  BookContentBundle,
+  ChapterBundleData,
   SearchIndexEntry,
   SupportedLang,
 } from '../src/types/scripture';
@@ -692,6 +694,33 @@ async function runPregeneration(): Promise<void> {
 
   const newIndexEntries: SearchIndexEntry[] = [];
   const imageManifest: Record<string, { url: string; caption: string }> = {};
+  const contentBundles = new Map<string, BookContentBundle>();
+
+  const getOrLoadBookBundle = (bookSlug: string, lang: SupportedLang): BookContentBundle => {
+    const mapKey = `${lang}:${bookSlug}`;
+    const existing = contentBundles.get(mapKey);
+    if (existing) return existing;
+
+    const bundlePath = path.join(outRoot, 'content', lang, `${bookSlug}.json`);
+    let loaded: BookContentBundle = {
+      version: 1,
+      bookSlug,
+      lang,
+      chapters: {},
+    };
+    if (fs.existsSync(bundlePath)) {
+      try {
+        const parsed = JSON.parse(fs.readFileSync(bundlePath, 'utf8')) as BookContentBundle;
+        if (parsed && typeof parsed.chapters === 'object') {
+          loaded = parsed;
+        }
+      } catch {
+        // Rebuild corrupted bundle
+      }
+    }
+    contentBundles.set(mapKey, loaded);
+    return loaded;
+  };
 
   for (const entry of selectedEntries) {
     const bookMeta = getBookBySlug(entry.bookSlug);
@@ -746,68 +775,47 @@ async function runPregeneration(): Promise<void> {
       const langOpt = getLanguageOption(lang);
       const bookName = getBookName(bookMeta, lang);
       const verses = getEffectiveVerses(entry, lang);
-
-      // 1. Bible Chapter JSON
-      const bibleDir = path.join(outRoot, 'bible', lang);
-      ensureDir(bibleDir);
-      fs.writeFileSync(
-        path.join(bibleDir, `${entry.key}.json`),
-        JSON.stringify(
-          {
-            bookSlug: entry.bookSlug,
-            bookName,
-            chapter: entry.chapter,
-            lang,
-            translation: langOpt.translationName,
-            verses,
-            isPreseeded: true,
-          },
-          null,
-          2
-        )
-      );
-
-      // 2. Devotional JSON (1, 3, 5, 10, 15 min variants)
-      const devDir = path.join(outRoot, 'devotionals', lang);
-      ensureDir(devDir);
-      fs.writeFileSync(
-        path.join(devDir, `${entry.key}.json`),
-        JSON.stringify(
-          {
-            bookSlug: entry.bookSlug,
-            chapter: entry.chapter,
-            lang,
-            reference: `${bookName} ${entry.chapter}`,
-            variants: buildDevotionalVariants(entry, lang),
-          },
-          null,
-          2
-        )
-      );
-
-      // 3. Song Lyrics JSON
-      const lyricsDir = path.join(outRoot, 'lyrics', lang);
-      ensureDir(lyricsDir);
       const localizedSong = entry.lyrics.localized?.[lang] ?? entry.lyrics;
-      fs.writeFileSync(
-        path.join(lyricsDir, `${entry.key}.json`),
-        JSON.stringify(
-          {
-            bookSlug: entry.bookSlug,
-            chapter: entry.chapter,
-            lang,
-            title: localizedSong.title,
-            tempoNote: localizedSong.tempoNote,
-            verse1: localizedSong.verse1,
-            chorus: localizedSong.chorus,
-            verse2: localizedSong.verse2,
-            bridge: localizedSong.bridge,
-          },
-          null,
-          2
-        )
-      );
+
+      const chapterBundle: ChapterBundleData = {
+        scripture: {
+          bookSlug: entry.bookSlug,
+          bookName,
+          chapter: entry.chapter,
+          lang,
+          translation: langOpt.translationName,
+          verses,
+          isPreseeded: true,
+        },
+        devotional: {
+          bookSlug: entry.bookSlug,
+          chapter: entry.chapter,
+          lang,
+          reference: `${bookName} ${entry.chapter}`,
+          variants: buildDevotionalVariants(entry, lang),
+        },
+        lyrics: {
+          bookSlug: entry.bookSlug,
+          chapter: entry.chapter,
+          lang,
+          title: localizedSong.title,
+          tempoNote: localizedSong.tempoNote,
+          verse1: localizedSong.verse1,
+          chorus: localizedSong.chorus,
+          verse2: localizedSong.verse2,
+          bridge: localizedSong.bridge,
+        },
+      };
+
+      const bundle = getOrLoadBookBundle(entry.bookSlug, lang);
+      bundle.chapters[String(entry.chapter)] = chapterBundle;
     }
+  }
+
+  for (const bundle of contentBundles.values()) {
+    const contentDir = path.join(outRoot, 'content', bundle.lang);
+    ensureDir(contentDir);
+    fs.writeFileSync(path.join(contentDir, `${bundle.bookSlug}.json`), JSON.stringify(bundle));
   }
 
   // Merge newIndexEntries into existing books/*.json bundles (or legacy index.json if present)
@@ -860,11 +868,34 @@ async function runPregeneration(): Promise<void> {
 
   const allLangCodes = SUPPORTED_LANGUAGES.map((l) => l.code);
   const bookOrder = new Map<string, number>(BIBLE_BOOKS.map((b) => [b.slug, b.id]));
+  const bundleChaptersCache = new Map<string, Set<string>>();
+  const hasChapterInLang = (lc: SupportedLang, bookSlug: string, chapter: number, id: string): boolean => {
+    const cacheKey = `${lc}:${bookSlug}`;
+    let chSet = bundleChaptersCache.get(cacheKey);
+    if (!chSet) {
+      chSet = new Set<string>();
+      const bundlePath = path.join(outRoot, 'content', lc, `${bookSlug}.json`);
+      if (fs.existsSync(bundlePath)) {
+        try {
+          const parsed = JSON.parse(fs.readFileSync(bundlePath, 'utf8')) as BookContentBundle;
+          for (const chKey of Object.keys(parsed.chapters ?? {})) {
+            chSet.add(chKey);
+          }
+        } catch {
+          // Ignore
+        }
+      }
+      bundleChaptersCache.set(cacheKey, chSet);
+    }
+    if (chSet.has(String(chapter))) return true;
+    return fs.existsSync(path.join(outRoot, 'bible', lc, `${id}.json`));
+  };
+
   const finalIndex = Array.from(mergedMap.values())
     .map((item) => ({
       ...item,
       availableLangs: allLangCodes.filter((lc) =>
-        fs.existsSync(path.join(outRoot, 'bible', lc, `${item.id}.json`))
+        hasChapterInLang(lc, item.bookSlug, item.chapter, item.id)
       ),
     }))
     .sort((a, b) => {
