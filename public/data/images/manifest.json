@@ -1,0 +1,282 @@
+{
+  "genesis_1": {
+    "url": "/src/assets/images/genesis_1_creation_1795368258625.jpg",
+    "caption": "Classical Study — First Light Over the Deep (Genesis 1)"
+  },
+  "psalm_23": {
+    "url": "/src/assets/images/psalm_23_pasture_1795368259412.jpg",
+    "caption": "Classical Study — Pastures Beside Still Waters (Psalm 23)"
+  },
+  "1corinthians_13": {
+    "url": "/src/assets/images/corinthians_13_love_1795368260120.jpg",
+    "caption": "Classical Study — Sanctuary Lamps & Olive Branch (1 Corinthians 13)"
+  },
+  "john_3": {
+    "url": "/src/assets/images/john_3_night_1795368260292.jpg",
+    "caption": "Classical Study — Lantern in the Courtyard at Night (John 3)"
+  },
+  "book:genesis": {
+    "url": "/data/images/books/genesis.svg",
+    "caption": "Canonical Study Plate — Book 01"
+  },
+  "book:exodus": {
+    "url": "/data/images/books/exodus.svg",
+    "caption": "Canonical Study Plate — Book 02"
+  },
+  "book:leviticus": {
+    "url": "/data/images/books/leviticus.svg",
+    "caption": "Canonical Study Plate — Book 03"
+  },
+  "book:numbers": {
+    "url": "/data/images/books/numbers.svg",
+    "caption": "Canonical Study Plate — Book 04"
+  },
+  "book:deuteronomy": {
+    "url": "/data/images/books/deuteronomy.svg",
+    "caption": "Canonical Study Plate — Book 05"
+  },
+  "book:joshua": {
+    "url": "/data/images/books/joshua.svg",
+    "caption": "Canonical Study Plate — Book 06"
+  },
+  "book:judges": {
+    "url": "/data/images/books/judges.svg",
+    "caption": "Canonical Study Plate — Book 07"
+  },
+  "book:ruth": {
+    "url": "/data/images/books/ruth.svg",
+    "caption": "Canonical Study Plate — Book 08"
+  },
+  "book:1samuel": {
+    "url": "/data/images/books/1samuel.svg",
+    "caption": "Canonical Study Plate — Book 09"
+  },
+  "book:2samuel": {
+    "url": "/data/images/books/2samuel.svg",
+    "caption": "Canonical Study Plate — Book 10"
+  },
+  "book:1kings": {
+    "url": "/data/images/books/1kings.svg",
+    "caption": "Canonical Study Plate — Book 11"
+  },
+  "book:2kings": {
+    "url": "/data/images/books/2kings.svg",
+    "caption": "Canonical Study Plate — Book 12"
+  },
+  "book:1chronicles": {
+    "url": "/data/images/books/1chronicles.svg",
+    "caption": "Canonical Study Plate — Book 13"
+  },
+  "book:2chronicles": {
+    "url": "/data/images/books/2chronicles.svg",
+    "caption": "Canonical Study Plate — Book 14"
+  },
+  "book:ezra": {
+    "url": "/data/images/books/ezra.svg",
+    "caption": "Canonical Study Plate — Book 15"
+  },
+  "book:nehemiah": {
+    "url": "/data/images/books/nehemiah.svg",
+    "caption": "Canonical Study Plate — Book 16"
+  },
+  "book:esther": {
+    "url": "/data/images/books/esther.svg",
+    "caption": "Canonical Study Plate — Book 17"
+  },
+  "book:job": {
+    "url": "/data/images/books/job.svg",
+    "caption": "Canonical Study Plate — Book 18"
+  },
+  "book:psalm": {
+    "url": "/data/images/books/psalm.svg",
+    "caption": "Canonical Study Plate — Book 19"
+  },
+  "book:proverbs": {
+    "url": "/data/images/books/proverbs.svg",
+    "caption": "Canonical Study Plate — Book 20"
+  },
+  "book:ecclesiastes": {
+    "url": "/data/images/books/ecclesiastes.svg",
+    "caption": "Canonical Study Plate — Book 21"
+  },
+  "book:songofsolomon": {
+    "url": "/data/images/books/songofsolomon.svg",
+    "caption": "Canonical Study Plate — Book 22"
+  },
+  "book:isaiah": {
+    "url": "/data/images/books/isaiah.svg",
+    "caption": "Canonical Study Plate — Book 23"
+  },
+  "book:jeremiah": {
+    "url": "/data/images/books/jeremiah.svg",
+    "caption": "Canonical Study Plate — Book 24"
+  },
+  "book:lamentations": {
+    "url": "/data/images/books/lamentations.svg",
+    "caption": "Canonical Study Plate — Book 25"
+  },
+  "book:ezekiel": {
+    "url": "/data/images/books/ezekiel.svg",
+    "caption": "Canonical Study Plate — Book 26"
+  },
+  "book:daniel": {
+    "url": "/data/images/books/daniel.svg",
+    "caption": "Canonical Study Plate — Book 27"
+  },
+  "book:hosea": {
+    "url": "/data/images/books/hosea.svg",
+    "caption": "Canonical Study Plate — Book 28"
+  },
+  "book:joel": {
+    "url": "/data/images/books/joel.svg",
+    "caption": "Canonical Study Plate — Book 29"
+  },
+  "book:amos": {
+    "url": "/data/images/books/amos.svg",
+    "caption": "Canonical Study Plate — Book 30"
+  },
+  "book:obadiah": {
+    "url": "/data/images/books/obadiah.svg",
+    "caption": "Canonical Study Plate — Book 31"
+  },
+  "book:jonah": {
+    "url": "/data/images/books/jonah.svg",
+    "caption": "Canonical Study Plate — Book 32"
+  },
+  "book:micah": {
+    "url": "/data/images/books/micah.svg",
+    "caption": "Canonical Study Plate — Book 33"
+  },
+  "book:nahum": {
+    "url": "/data/images/books/nahum.svg",
+    "caption": "Canonical Study Plate — Book 34"
+  },
+  "book:habakkuk": {
+    "url": "/data/images/books/habakkuk.svg",
+    "caption": "Canonical Study Plate — Book 35"
+  },
+  "book:zephaniah": {
+    "url": "/data/images/books/zephaniah.svg",
+    "caption": "Canonical Study Plate — Book 36"
+  },
+  "book:haggai": {
+    "url": "/data/images/books/haggai.svg",
+    "caption": "Canonical Study Plate — Book 37"
+  },
+  "book:zechariah": {
+    "url": "/data/images/books/zechariah.svg",
+    "caption": "Canonical Study Plate — Book 38"
+  },
+  "book:malachi": {
+    "url": "/data/images/books/malachi.svg",
+    "caption": "Canonical Study Plate — Book 39"
+  },
+  "book:matthew": {
+    "url": "/data/images/books/matthew.svg",
+    "caption": "Canonical Study Plate — Book 40"
+  },
+  "book:mark": {
+    "url": "/data/images/books/mark.svg",
+    "caption": "Canonical Study Plate — Book 41"
+  },
+  "book:luke": {
+    "url": "/data/images/books/luke.svg",
+    "caption": "Canonical Study Plate — Book 42"
+  },
+  "book:john": {
+    "url": "/data/images/books/john.svg",
+    "caption": "Canonical Study Plate — Book 43"
+  },
+  "book:acts": {
+    "url": "/data/images/books/acts.svg",
+    "caption": "Canonical Study Plate — Book 44"
+  },
+  "book:romans": {
+    "url": "/data/images/books/romans.svg",
+    "caption": "Canonical Study Plate — Book 45"
+  },
+  "book:1corinthians": {
+    "url": "/data/images/books/1corinthians.svg",
+    "caption": "Canonical Study Plate — Book 46"
+  },
+  "book:2corinthians": {
+    "url": "/data/images/books/2corinthians.svg",
+    "caption": "Canonical Study Plate — Book 47"
+  },
+  "book:galatians": {
+    "url": "/data/images/books/galatians.svg",
+    "caption": "Canonical Study Plate — Book 48"
+  },
+  "book:ephesians": {
+    "url": "/data/images/books/ephesians.svg",
+    "caption": "Canonical Study Plate — Book 49"
+  },
+  "book:philippians": {
+    "url": "/data/images/books/philippians.svg",
+    "caption": "Canonical Study Plate — Book 50"
+  },
+  "book:colossians": {
+    "url": "/data/images/books/colossians.svg",
+    "caption": "Canonical Study Plate — Book 51"
+  },
+  "book:1thessalonians": {
+    "url": "/data/images/books/1thessalonians.svg",
+    "caption": "Canonical Study Plate — Book 52"
+  },
+  "book:2thessalonians": {
+    "url": "/data/images/books/2thessalonians.svg",
+    "caption": "Canonical Study Plate — Book 53"
+  },
+  "book:1timothy": {
+    "url": "/data/images/books/1timothy.svg",
+    "caption": "Canonical Study Plate — Book 54"
+  },
+  "book:2timothy": {
+    "url": "/data/images/books/2timothy.svg",
+    "caption": "Canonical Study Plate — Book 55"
+  },
+  "book:titus": {
+    "url": "/data/images/books/titus.svg",
+    "caption": "Canonical Study Plate — Book 56"
+  },
+  "book:philemon": {
+    "url": "/data/images/books/philemon.svg",
+    "caption": "Canonical Study Plate — Book 57"
+  },
+  "book:hebrews": {
+    "url": "/data/images/books/hebrews.svg",
+    "caption": "Canonical Study Plate — Book 58"
+  },
+  "book:james": {
+    "url": "/data/images/books/james.svg",
+    "caption": "Canonical Study Plate — Book 59"
+  },
+  "book:1peter": {
+    "url": "/data/images/books/1peter.svg",
+    "caption": "Canonical Study Plate — Book 60"
+  },
+  "book:2peter": {
+    "url": "/data/images/books/2peter.svg",
+    "caption": "Canonical Study Plate — Book 61"
+  },
+  "book:1john": {
+    "url": "/data/images/books/1john.svg",
+    "caption": "Canonical Study Plate — Book 62"
+  },
+  "book:2john": {
+    "url": "/data/images/books/2john.svg",
+    "caption": "Canonical Study Plate — Book 63"
+  },
+  "book:3john": {
+    "url": "/data/images/books/3john.svg",
+    "caption": "Canonical Study Plate — Book 64"
+  },
+  "book:jude": {
+    "url": "/data/images/books/jude.svg",
+    "caption": "Canonical Study Plate — Book 65"
+  },
+  "book:revelation": {
+    "url": "/data/images/books/revelation.svg",
+    "caption": "Canonical Study Plate — Book 66"
+  }
+}

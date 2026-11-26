@@ -1,0 +1,38 @@
+{
+  "bookSlug": "genesis",
+  "bookName": "創世記",
+  "chapter": 1,
+  "lang": "zh",
+  "translation": "和合本 (CUV Traditional)",
+  "verses": [
+    {
+      "verse": 1,
+      "text": "起初，神創造天地。"
+    },
+    {
+      "verse": 2,
+      "text": "地是空虛混沌，淵面黑暗；神的靈運行在水面上。"
+    },
+    {
+      "verse": 3,
+      "text": "神說：「要有光」，就有了光。"
+    },
+    {
+      "verse": 4,
+      "text": "神看光是好的，就把光暗分開了。"
+    },
+    {
+      "verse": 5,
+      "text": "神稱光為「晝」，稱暗為「夜」。有晚上，有早晨，這是頭一日。"
+    },
+    {
+      "verse": 27,
+      "text": "神就照著自己的形像造人，乃是照著他的形像造男造女。"
+    },
+    {
+      "verse": 31,
+      "text": "神看著一切所造的都甚好。有晚上，有早晨，是第六日。"
+    }
+  ],
+  "isPreseeded": true
+}

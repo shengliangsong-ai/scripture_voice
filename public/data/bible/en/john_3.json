@@ -1,0 +1,54 @@
+{
+  "bookSlug": "john",
+  "bookName": "John",
+  "chapter": 3,
+  "lang": "en",
+  "translation": "World English Bible (WEB)",
+  "verses": [
+    {
+      "verse": 1,
+      "text": "Now there was a man of the Pharisees named Nicodemus, a ruler of the Jews."
+    },
+    {
+      "verse": 2,
+      "text": "The same came to him by night, and said to him, “Rabbi, we know that you are a teacher come from God, for no one can do these signs that you do, unless God is with him.”"
+    },
+    {
+      "verse": 3,
+      "text": "Jesus answered him, “Most certainly, I tell you, unless one is born anew, he can’t see God’s Kingdom.”"
+    },
+    {
+      "verse": 5,
+      "text": "Jesus answered, “Most certainly I tell you, unless one is born of water and spirit, he can’t enter into God’s Kingdom.”"
+    },
+    {
+      "verse": 8,
+      "text": "“The wind blows where it wants to, and you hear its sound, but don’t know where it comes from and where it is going. So is everyone who is born of the Spirit.”"
+    },
+    {
+      "verse": 14,
+      "text": "“As Moses lifted up the serpent in the wilderness, even so must the Son of Man be lifted up,”"
+    },
+    {
+      "verse": 15,
+      "text": "“that whoever believes in him should not perish, but have eternal life.”"
+    },
+    {
+      "verse": 16,
+      "text": "“For God so loved the world, that he gave his one and only Son, that whoever believes in him should not perish, but have eternal life.”"
+    },
+    {
+      "verse": 17,
+      "text": "“For God didn’t send his Son into the world to judge the world, but that the world should be saved through him.”"
+    },
+    {
+      "verse": 19,
+      "text": "“This is the judgment, that the light has come into the world, and men loved the darkness rather than the light; for their works were evil.”"
+    },
+    {
+      "verse": 21,
+      "text": "“But he who does the truth comes to the light, that his works may be revealed, that they have been done in God.”"
+    }
+  ],
+  "isPreseeded": true
+}

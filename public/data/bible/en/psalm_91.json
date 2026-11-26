@@ -1,0 +1,30 @@
+{
+  "bookSlug": "psalm",
+  "bookName": "Psalms",
+  "chapter": 91,
+  "lang": "en",
+  "translation": "World English Bible (WEB)",
+  "verses": [
+    {
+      "verse": 1,
+      "text": "He who dwells in the secret place of the Most High will rest in the shadow of the Almighty."
+    },
+    {
+      "verse": 2,
+      "text": "I will say of Yahweh, “He is my refuge and my fortress; my God, in whom I trust.”"
+    },
+    {
+      "verse": 4,
+      "text": "He will cover you with his feathers. Under his wings you will take refuge. His faithfulness is your shield and rampart."
+    },
+    {
+      "verse": 5,
+      "text": "You shall not be afraid of the terror by night, nor of the arrow that flies by day;"
+    },
+    {
+      "verse": 11,
+      "text": "For he will put his angels in charge of you, to guard you in all your ways."
+    }
+  ],
+  "isPreseeded": true
+}

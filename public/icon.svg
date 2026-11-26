@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#4a362f"/>
+  <rect x="24" y="24" width="464" height="464" rx="92" stroke="#a18072" stroke-opacity="0.35" stroke-width="4"/>
+  <!-- Open book pages -->
+  <path d="M256 154C220 132 164 128 118 142C111.4 144 107 150.1 107 157V344C107 351.8 114.6 357.5 122.1 355.2C167.2 341.4 221 345.4 256 368C291 345.4 344.8 341.4 389.9 355.2C397.4 357.5 405 351.8 405 344V157C405 150.1 400.6 144 394 142C348 128 292 132 256 154Z" fill="#fdf8f6" stroke="#d2bab0" stroke-width="10" stroke-linejoin="round"/>
+  <path d="M256 154V368" stroke="#a18072" stroke-width="8" stroke-linecap="round"/>
+  <!-- Subtle verse lines -->
+  <path d="M148 192H220M148 228H220M148 264H204" stroke="#725548" stroke-width="10" stroke-linecap="round"/>
+  <path d="M292 192H364M292 228H364M292 264H348" stroke="#725548" stroke-width="10" stroke-linecap="round"/>
+  <!-- Voice waveform crest -->
+  <path d="M236 106V118M256 92V124M276 106V118" stroke="#eaddd7" stroke-width="10" stroke-linecap="round"/>
+</svg>

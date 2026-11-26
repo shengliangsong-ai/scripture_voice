@@ -1,0 +1,38 @@
+{
+  "bookSlug": "matthew",
+  "bookName": "马太福音",
+  "chapter": 5,
+  "lang": "zh-CN",
+  "translation": "和合本 (CUV Simplified)",
+  "verses": [
+    {
+      "verse": 3,
+      "text": "「虚心的人有福了！因为天国是他们的。」"
+    },
+    {
+      "verse": 4,
+      "text": "「哀恸的人有福了！因为他们必得安慰。」"
+    },
+    {
+      "verse": 5,
+      "text": "「温柔的人有福了！因为他们必承受地土。」"
+    },
+    {
+      "verse": 7,
+      "text": "「怜恤人的人有福了！因为他们必蒙怜恤。」"
+    },
+    {
+      "verse": 8,
+      "text": "「清心的人有福了！因为他们必得见神。」"
+    },
+    {
+      "verse": 9,
+      "text": "「使人和睦的人有福了！因为他们必称为神的儿子。」"
+    },
+    {
+      "verse": 14,
+      "text": "「你们是世上的光。城造在山上是不能隐藏的。」"
+    }
+  ],
+  "isPreseeded": true
+}

@@ -1,0 +1,38 @@
+{
+  "bookSlug": "philippians",
+  "bookName": "Philippians",
+  "chapter": 4,
+  "lang": "en",
+  "translation": "World English Bible (WEB)",
+  "verses": [
+    {
+      "verse": 4,
+      "text": "Rejoice in the Lord always! Again I will say, “Rejoice!”"
+    },
+    {
+      "verse": 5,
+      "text": "Let your gentleness be known to all men. The Lord is at hand."
+    },
+    {
+      "verse": 6,
+      "text": "In nothing be anxious, but in everything, by prayer and petition with thanksgiving, let your requests be made known to God."
+    },
+    {
+      "verse": 7,
+      "text": "And the peace of God, which surpasses all understanding, will guard your hearts and your thoughts in Christ Jesus."
+    },
+    {
+      "verse": 8,
+      "text": "Finally, brothers, whatever things are true, whatever things are honorable, whatever things are just, whatever things are pure, whatever things are lovely, whatever things are of good report: if there is any virtue and if there is any praise, think about these things."
+    },
+    {
+      "verse": 11,
+      "text": "Not that I speak because of lack, for I have learned in whatever state I am, to be content in it."
+    },
+    {
+      "verse": 13,
+      "text": "I can do all things through Christ, who strengthens me."
+    }
+  ],
+  "isPreseeded": true
+}

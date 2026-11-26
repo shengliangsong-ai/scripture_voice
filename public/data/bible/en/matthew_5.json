@@ -1,0 +1,38 @@
+{
+  "bookSlug": "matthew",
+  "bookName": "Matthew",
+  "chapter": 5,
+  "lang": "en",
+  "translation": "World English Bible (WEB)",
+  "verses": [
+    {
+      "verse": 3,
+      "text": "“Blessed are the poor in spirit, for theirs is the Kingdom of Heaven.”"
+    },
+    {
+      "verse": 4,
+      "text": "“Blessed are those who mourn, for they shall be comforted.”"
+    },
+    {
+      "verse": 5,
+      "text": "“Blessed are the gentle, for they shall inherit the earth.”"
+    },
+    {
+      "verse": 7,
+      "text": "“Blessed are the merciful, for they shall obtain mercy.”"
+    },
+    {
+      "verse": 8,
+      "text": "“Blessed are the pure in heart, for they shall see God.”"
+    },
+    {
+      "verse": 9,
+      "text": "“Blessed are the peacemakers, for they shall be called children of God.”"
+    },
+    {
+      "verse": 14,
+      "text": "“You are the light of the world. A city located on a hill can’t be hidden.”"
+    }
+  ],
+  "isPreseeded": true
+}

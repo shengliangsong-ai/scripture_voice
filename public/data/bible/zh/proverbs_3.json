@@ -1,0 +1,26 @@
+{
+  "bookSlug": "proverbs",
+  "bookName": "箴言",
+  "chapter": 3,
+  "lang": "zh",
+  "translation": "和合本 (CUV Traditional)",
+  "verses": [
+    {
+      "verse": 1,
+      "text": "我兒，不要忘記我的法則；你心要謹守我的誡命；"
+    },
+    {
+      "verse": 3,
+      "text": "不可使慈愛、誠實離開你，要繫在你頸項上，刻在你心版上。"
+    },
+    {
+      "verse": 5,
+      "text": "你要專心仰賴耶和華，不可倚靠自己的聰明，"
+    },
+    {
+      "verse": 6,
+      "text": "在你一切所行的事上都要認定他，他必指引你的路。"
+    }
+  ],
+  "isPreseeded": true
+}

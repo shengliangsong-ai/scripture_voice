@@ -1,0 +1,8 @@
+{
+  "name": "Scripture Voice",
+  "description": "An offline-capable multi-language Bible audio podcast, study, and devotional reader powered by local scripture text and pre-generated static assets.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "majorCapabilities": []
+}
