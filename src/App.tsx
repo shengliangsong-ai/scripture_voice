@@ -128,6 +128,8 @@ export default function App() {
           manifestLangs.includes(initialPrefs.lang)
         ) {
           setLang(initialPrefs.lang);
+        } else if (manifestLangs.length > 0 && !manifestLangs.includes(initialPrefs.lang ?? 'en')) {
+          setLang(manifestLangs[0]);
         }
       })
       .catch(() => {

@@ -5,7 +5,7 @@ Every run merges cleanly into per-book `public/data/content/{lang}/{book}.json`,
 
 > **Tip — Book Number or Slug + Chapter Filter**  
 > You can use either `--book=<slug>` or book number `1`–`66` (`--book=24 chapter=all` for Jeremiah, or `--book=24 chapter=3` for a specific chapter).  
-> By default, English and Chinese (`en`, `zh`, `zh-CN`) are built; append `--langs=all` or `--langs=es,fr,ja` to generate additional languages, or `--no-crawl` once cached in `scripts/.cache/`.
+> By default, English and Simplified Chinese (`en`, `zh-CN`) are built; append `--langs=all` or `--langs=zh,es,fr,ja` to generate additional languages, or `--no-crawl` once cached in `scripts/.cache/`.
 
 ---
 
@@ -21,11 +21,11 @@ npm run pregenerate -- --book=24 chapter=3
 # Chapter 1 of all 66 books + featured chapters
 npm run pregenerate -- --all-books
 
-# First 50%+ of all 27 New Testament books (136+ chapters) in Traditional & Simplified Chinese
-npm run pregenerate -- --nt-half --langs=zh,zh-CN
+# First 50%+ of all 27 New Testament books (136+ chapters) in Simplified Chinese
+npm run pregenerate -- --nt-half --langs=zh-CN
 
-# Full 66-book / 1,189-chapter canon (scoped to EN + Chinese for faster build)
-npm run pregenerate -- --all-canon --langs=en,zh,zh-CN
+# Full 66-book / 1,189-chapter canon (English + Simplified Chinese)
+npm run pregenerate -- --all-canon --langs=en,zh-CN
 ```
 
 ---

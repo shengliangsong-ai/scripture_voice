@@ -132,7 +132,7 @@ function parseArgs(argv: string[]): CliOptions {
   let allBooks = false;
   let ntHalf = false;
   let allCanon = false;
-  let langs: SupportedLang[] = ['en', 'zh', 'zh-CN'];
+  let langs: SupportedLang[] = ['en', 'zh-CN'];
   let crawl = true;
 
   for (const rawArg of argv) {
@@ -371,7 +371,8 @@ async function crawlChapterEntry(
   let zhHeading: string | undefined;
   let zhCnHeading: string | undefined;
 
-  const langsNeeded = new Set<SupportedLang>(['en', 'zh', 'zh-CN', ...targetLangs]);
+  // Keep 'en' as canonical verseMap anchor, plus only the explicitly requested target languages
+  const langsNeeded = new Set<SupportedLang>(['en', ...targetLangs]);
 
   for (const lang of langsNeeded) {
     if (versesByLang[lang] && versesByLang[lang]!.length > 0 && existingCached) {

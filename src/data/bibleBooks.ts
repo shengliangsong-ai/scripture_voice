@@ -22,7 +22,7 @@ export const SUPPORTED_LANGUAGES: LanguageOption[] = [
   { code: 'hi', label: 'Hindi', nativeLabel: 'हिन्दी (OV)', bcp47: 'hi-IN', translationName: 'Hindi Old Version (OV)' },
 ];
 
-export const DEFAULT_UI_LANGS: SupportedLang[] = ['en', 'zh', 'zh-CN'];
+export const DEFAULT_UI_LANGS: SupportedLang[] = ['en', 'zh-CN'];
 
 export const DEVOTIONAL_LENGTHS = [1, 3, 5, 10, 15] as const;
 

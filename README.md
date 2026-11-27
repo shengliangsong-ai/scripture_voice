@@ -8,8 +8,8 @@
 - **Lazy-Loaded 66-Book Architecture**: On startup, the app fetches only the lightweight `7.1 KB` manifest (`public/data/books-manifest.json`), then lazy-loads individual per-book JSON bundles (`public/data/books/{book}.json`) on demand with in-memory caching and request deduplication.
 - **66-Book Canonical Sidebar**: Browse all Old Testament (`1`–`39`) and New Testament (`40`–`66`) books with **Old** / **New** testament tabs, explicit chapter counts, chapter grids, and localized book names.
 - **Scoped Client-Side BM25 & Voice Search**: Query keywords, themes (`"Comfort in anxiety"`, `"焦慮中的安慰"`), or scripture references (`"John 3:16"`, `"約翰福音 3:16"`) with CJK character/bigram tokenization across either **This Book only** or the **Full Bible** (assembled from split `books/*.json` bundles without a duplicate monolith), plus optional microphone voice search via the browser Web Speech API.
-- **Real-Time OS Voice Synthesis & Follow-Along Highlighting**: Reads localized scripture verses, devotional commentary, and worship lyrics aloud in real time via **`window.speechSynthesis`** matched to the active locale (`en-US`, `zh-TW`, `zh-CN`, etc.)—with a direct **installed OS voice picker**, narrator timbre tuning (`Fenrir`, `Kore`, `Puck`, `Charon`, `Zephyr`), playback speed control (`0.85×`–`1.3×`), live spoken subtitles, lock-screen Media Session controls, and automatic verse-by-verse highlighting & scrolling as audio plays. **Zero pre-generated `.wav`/`.mp3` files are shipped.**
-- **Default English & Chinese (`en`, `zh`, `zh-CN`) + On-Demand Languages**: Ships streamlined with English, Traditional Chinese, and Simplified Chinese (`~207` tracked files, `~8.4 MB` working tree), while supporting on-demand generation of 8 additional languages (`es`, `fr`, `de`, `pt`, `it`, `ja`, `ko`, `hi`) via `scripts/pregenerate.ts`.
+- **Real-Time OS Voice Synthesis & Follow-Along Highlighting**: Reads localized scripture verses, devotional commentary, and worship lyrics aloud in real time via **`window.speechSynthesis`** matched to the active locale (`en-US`, `zh-CN`, etc.)—with a direct **installed OS voice picker**, narrator timbre tuning (`Fenrir`, `Kore`, `Puck`, `Charon`, `Zephyr`), playback speed control (`0.85×`–`1.3×`), live spoken subtitles, lock-screen Media Session controls, and automatic verse-by-verse highlighting & scrolling as audio plays. **Zero pre-generated `.wav`/`.mp3` files are shipped.**
+- **Default English & Simplified Chinese (`en`, `zh-CN`) + On-Demand Languages**: Ships streamlined with English and Simplified Chinese (`~197` tracked files, `~8.3 MB` working tree), while supporting on-demand generation of 9 additional languages (`zh`, `es`, `fr`, `de`, `pt`, `it`, `ja`, `ko`, `hi`) via `scripts/pregenerate.ts`.
 - **Per-Book Content Bundles (`content/{lang}/{bookSlug}.json`)**: Each book packs scripture, multi-length devotionals, and worship lyrics into a single minified JSON file per language (`66` files per language across all `1,189` chapters—`132` files for `en` + `zh-CN` instead of `7,134` chapter files), cutting chapter navigation inside a book to zero extra requests.
 - **Artwork Plates**: Features 4 flagship classical oil paintings (`Genesis 1`, `Psalm 23`, `1 Corinthians 13`, `John 3` in `src/assets/images/`) plus 66 bespoke archival SVG book plates (`public/data/images/books/{book}.svg`, `145 KB` total).
 - **Study Library, Font Sizing & Installable PWA**: Includes a reader font-size toggle (`Compact` / `Standard` / `Large`), per-verse bookmarks & reading history stored privately in `localStorage`, one-tap **Save Book Offline** precaching via Workbox, iPhone **Add to Home Screen** guidance, clipboard copy, Web Share, and printable PDF study sheets via `html2canvas` and `jspdf`.
@@ -18,7 +18,7 @@
 
 | Tier | Scope | Details |
 | --- | --- | --- |
-| **Canonical Index** | **66 books / 76 chapters** pre-generated (`Genesis 1`–`Revelation 1`, flagship chapters, and `Ezra 2`) | Default languages: `en`, `zh`, `zh-CN` (`public/data/books-manifest.json` + `public/data/books/*.json`) |
+| **Canonical Index** | **66 books / 76 chapters** pre-generated (`Genesis 1`–`Revelation 1`, flagship chapters, and `Ezra 2`) | Default languages: `en`, `zh-CN` (`public/data/books-manifest.json` + `public/data/books/*.json`) |
 | **Artwork Plates** | 4 oil paintings (`3.7 MB`) + 66 SVG book plates (`145 KB`) | Flagship scenes + custom archival vector plate per canonical book |
 | **Full Canon Expansion** | All `66` books / `1,189` chapters navigable | Run `npm run pregenerate -- --all-canon` (or per-book commands) to populate remaining chapters |
 
@@ -77,7 +77,7 @@ scripture_voice/
 All static JSON bundles under `public/data/` are compiled at build time by `scripts/pregenerate.ts` using curated chapters (`src/data/seededCorpus.ts`), the keyless public-domain crawler (`bible.helloao.org`), and local cache (`scripts/.cache/`). No LLM or TTS API keys are used:
 
 ```bash
-# Rebuild seeded + cached chapters for default languages (en, zh, zh-CN)
+# Rebuild seeded + cached chapters for default languages (en, zh-CN)
 npm run pregenerate
 
 # Generate additional languages (or all 11 supported languages) on demand
@@ -87,31 +87,28 @@ npm run pregenerate -- --langs=all
 # Crawl Chapter 1 of all 66 Bible books + flagship chapters
 npm run pregenerate -- --all-books
 
-# Crawl >=50% of New Testament books in Chinese
-npm run pregenerate -- --nt-half --langs=zh,zh-CN
+# Crawl >=50% of New Testament books in Simplified Chinese
+npm run pregenerate -- --nt-half --langs=zh-CN
 
 # Crawl a single chapter or an entire book by slug or number (1-66)
 npm run pregenerate -- --chapters=ezra_2
 npm run pregenerate -- --book=ezra
 npm run pregenerate -- --book=24 chapter=all
 
-# Crawl the entire 66-book, 1,189-chapter public-domain Bible
-npm run pregenerate -- --all-canon --langs=en,zh,zh-CN
+# Crawl the entire 66-book, 1,189-chapter public-domain Bible (English + Simplified Chinese)
+npm run pregenerate -- --all-canon --langs=en,zh-CN
 
 # Rebuild purely from local cache without network access
 npm run pregenerate -- --chapters=ezra_2 --no-crawl
 ```
 
-### Example: Pre-Generate All 66 Books / 1,189 Chapters (English & Chinese Only)
+### Example: Pre-Generate All 66 Books / 1,189 Chapters (English & Simplified Chinese Only)
 
-To populate every book and chapter in English and Chinese (`public/data/content/{lang}/{book}.json` — only **66 files per language** instead of thousands of chapter files):
+To populate every book and chapter in English and Simplified Chinese (`public/data/content/{lang}/{book}.json` — only **66 files per language**, **132 total** instead of thousands of chapter files):
 
 ```bash
-# 1. Pre-generate all 66 books / 1,189 chapters in English + Traditional & Simplified Chinese
-npm run pregenerate -- --all-canon --langs=en,zh,zh-CN
-
-# (Optional) Or Simplified Chinese + English only (132 content files total):
-# npm run pregenerate -- --all-canon --langs=en,zh-CN
+# 1. Pre-generate all 66 books / 1,189 chapters in English + Simplified Chinese
+npm run pregenerate -- --all-canon --langs=en,zh-CN
 
 # 2. Later rebuilds from local cache (scripts/.cache/) without hitting the network:
 npm run pregenerate -- --all-canon --langs=en,zh-CN --no-crawl

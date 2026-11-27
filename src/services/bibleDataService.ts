@@ -299,7 +299,7 @@ export function getAvailableChapterKeysFromManifest(
 export function getAvailableLanguagesFromManifest(
   manifest: BibleManifest | null
 ): SupportedLang[] {
-  const active = new Set<SupportedLang>(['en', 'zh', 'zh-CN']);
+  const active = new Set<SupportedLang>();
   if (manifest) {
     for (const book of manifest.books) {
       if (book.defaultLangs) {
@@ -312,7 +312,7 @@ export function getAvailableLanguagesFromManifest(
       }
     }
   }
-  return Array.from(active);
+  return active.size > 0 ? Array.from(active) : ['en', 'zh-CN'];
 }
 
 export const bibleDataService: BibleDataService = {

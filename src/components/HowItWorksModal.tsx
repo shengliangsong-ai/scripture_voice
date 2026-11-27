@@ -84,7 +84,7 @@ export function HowItWorksModal({ lang, isOpen, onClose }: HowItWorksModalProps)
             </div>
             <p className="text-xs text-bible-700">{hw.pipelineDesc}</p>
             <pre className="p-2.5 bg-white border border-bible-200 rounded text-xs text-bible-900 overflow-x-auto">
-              npm run pregenerate -- --chapters=genesis_1,psalm_23 --langs=en,zh,zh-CN
+              npm run pregenerate -- --chapters=genesis_1,psalm_23 --langs=en,zh-CN
             </pre>
           </div>
 
