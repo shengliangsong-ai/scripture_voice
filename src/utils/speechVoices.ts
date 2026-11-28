@@ -31,6 +31,8 @@ export const LOW_QUALITY_OR_NOVELTY_HINTS = [
   'whisper',
   'wobble',
   'zarvox',
+  'tingting',
+  'ting-ting',
 ];
 
 export function isLowQualityVoice(v: SpeechSynthesisVoice): boolean {
@@ -64,8 +66,6 @@ export function scoreOsVoice(v: SpeechSynthesisVoice, bcp47: string): number {
     name.includes('yunyang') ||
     name.includes('meijia') ||
     name.includes('mei-jia') ||
-    name.includes('tingting') ||
-    name.includes('ting-ting') ||
     name.includes('lilian') ||
     name.includes('shanshan') ||
     name.includes('yu-shu') ||
