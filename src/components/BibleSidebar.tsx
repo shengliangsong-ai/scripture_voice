@@ -28,9 +28,7 @@ export function BibleSidebar({
   onCloseMobile,
 }: BibleSidebarProps) {
   const [filterText, setFilterText] = useState('');
-  const [testamentFilter, setTestamentFilter] = useState<Testament>(
-    () => getBookBySlug(activeBookSlug)?.testament ?? 'OT'
-  );
+  const [testamentFilter, setTestamentFilter] = useState<Testament>('NT');
   const [expandedBook, setExpandedBook] = useState<string>(activeBookSlug);
   const [manifest, setManifest] = useState<BibleManifest | null>(null);
   const [loadedBooksMap, setLoadedBooksMap] = useState<Record<string, BibleChapter[]>>({});
@@ -86,13 +84,13 @@ export function BibleSidebar({
 
   // Sync testament tab, expansion, and lazy-load when navigating to a different book after startup
   useEffect(() => {
-    const activeBook = getBookBySlug(activeBookSlug);
-    if (activeBook) {
-      setTestamentFilter(activeBook.testament);
-    }
-    setExpandedBook(activeBookSlug);
     if (activeBookSlug !== initialBookRef.current) {
       initialBookRef.current = activeBookSlug;
+      const activeBook = getBookBySlug(activeBookSlug);
+      if (activeBook) {
+        setTestamentFilter(activeBook.testament);
+      }
+      setExpandedBook(activeBookSlug);
       ensureBookLoaded(activeBookSlug);
     }
   }, [activeBookSlug, ensureBookLoaded]);

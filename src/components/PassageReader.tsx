@@ -21,7 +21,7 @@ import { DevotionalLength, NarratorVoice, ReaderFontSize } from '../types/script
 import {
   buildPlainTextPassage,
   copyRichPassageToClipboard,
-  exportPassageElementToPdf,
+  exportStudySheetToPdf,
 } from '../utils/exportUtils';
 
 interface PassageReaderProps {
@@ -167,15 +167,19 @@ export function PassageReader({
 
   const handleExportPdf = async () => {
     setShareMenuOpen(false);
-    if (!printableRef.current) return;
     setIsExportingPdf(true);
     try {
-      await exportPassageElementToPdf(
-        printableRef.current,
-        `${scripture.bookSlug}_${scripture.chapter}_scripture_voice.pdf`
-      );
+      await exportStudySheetToPdf({
+        scripture,
+        devotional: activeDevotional,
+        artworkUrl: artwork?.url,
+        artworkCaption: localizedCaption,
+        lyrics: showLyrics ? lyrics : undefined,
+        filename: `${scripture.bookSlug}_${scripture.chapter}_scripture_voice.pdf`,
+      });
       notify(ui.pdfExportedNotice);
-    } catch {
+    } catch (err) {
+      console.error('[Scripture Voice] PDF export failed:', err);
       notify(ui.pdfFailedNotice);
     } finally {
       setIsExportingPdf(false);
