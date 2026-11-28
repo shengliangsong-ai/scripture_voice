@@ -26,6 +26,21 @@ export interface IosGuideStrings {
   gotIt: string;
 }
 
+export interface DesktopInstallGuideStrings {
+  modalTitle: string;
+  tabDesktop: string;
+  tabMobile: string;
+  safariTitle: string;
+  safariStep1: string;
+  safariStep2: string;
+  chromeTitle: string;
+  chromeStep1: string;
+  chromeStep2: string;
+  desktopTip: string;
+  iframeNotice: string;
+  openNewTab: string;
+}
+
 export interface UiStrings {
   appName: string;
   languageLabel: string;
@@ -141,6 +156,7 @@ export interface UiStrings {
   artworkCaptions: Record<string, string>;
   howItWorks: HowItWorksStrings;
   iosGuide: IosGuideStrings;
+  desktopGuide: DesktopInstallGuideStrings;
   unseeded: {
     referenceTopic: string;
     searchTitle: (ref: string) => string;
@@ -337,6 +353,20 @@ const EN_STRINGS: UiStrings = {
     step3Bold: 'Add to Home Screen',
     desc: 'Once added, Scripture Voice launches full-screen and works offline with cached scripture, devotionals, lyrics, and artwork.',
     gotIt: 'Got it',
+  },
+  desktopGuide: {
+    modalTitle: 'Install Scripture Voice App',
+    tabDesktop: 'MacBook / Desktop',
+    tabMobile: 'iPhone / iPad',
+    safariTitle: 'MacBook Safari',
+    safariStep1: 'Click File → Add to Dock… in the menu bar (or click Share in Safari’s toolbar → Add to Dock).',
+    safariStep2: 'Click Add to create a standalone Scripture Voice app.',
+    chromeTitle: 'MacBook / Desktop Chrome or Edge',
+    chromeStep1: 'Click the Install icon on the right side of the address bar, or open menu ⋮ → Cast, save, and share → Install Scripture Voice…',
+    chromeStep2: 'Click Install. It appears in Applications / Chrome Apps and opens in its own window.',
+    desktopTip: 'Tip: Drag the installed app (or Make Alias) from Applications / Chrome Apps onto your Mac Desktop for one-click launch.',
+    iframeNotice: 'You are viewing inside an embedded frame. Open directly in a browser tab to install.',
+    openNewTab: 'Open App in New Tab',
   },
   unseeded: {
     referenceTopic: 'reference',
@@ -549,6 +579,20 @@ const ZH_TW_STRINGS: UiStrings = {
     desc: '加入後即可像原生 App 一樣全螢幕啟動，並離線閱讀已快取的經文、靈修、詩歌與插畫。',
     gotIt: '知道了',
   },
+  desktopGuide: {
+    modalTitle: '安裝聖經之音應用程式',
+    tabDesktop: 'MacBook / 電腦桌面',
+    tabMobile: 'iPhone / iPad 主畫面',
+    safariTitle: 'MacBook Safari 瀏覽器',
+    safariStep1: '在頂部選單點擊「檔案」→「加入 Dock…」（或點擊 Safari 工具列「分享」圖示 →「加入 Dock」）。',
+    safariStep2: '點擊「加入」，即可建立獨立視窗運行的桌面應用程式。',
+    chromeTitle: 'MacBook / 電腦 Chrome 或 Edge',
+    chromeStep1: '點擊網址列右側的「安裝」圖示，或點選右上角選單 ⋮ →「投放、儲存及分享」→「安裝聖經之音…」。',
+    chromeStep2: '確認「安裝」後即可從「應用程式」或 Dock 啟動；若要放桌面可拖曳替身至 Mac 桌面。',
+    desktopTip: '提示：安裝完成後，可從 Mac「應用程式」資料夾建立替身（Alias）放在桌面上隨時開啟。',
+    iframeNotice: '目前位於內嵌預覽框架中，請先在新分頁直接開啟本頁再執行瀏覽器安裝。',
+    openNewTab: '在新分頁開啟以安裝',
+  },
   unseeded: {
     referenceTopic: '章節索引',
     searchTitle: (ref) => `${ref} · 正典章節`,
@@ -759,6 +803,20 @@ const ZH_CN_STRINGS: UiStrings = {
     step3Bold: '添加到主屏幕',
     desc: '添加后即可像原生应用一样全屏幕启动，并离线阅读已缓存的经文、灵修、诗歌与插画。',
     gotIt: '知道了',
+  },
+  desktopGuide: {
+    modalTitle: '安装圣经之音应用',
+    tabDesktop: 'MacBook / 电脑桌面',
+    tabMobile: 'iPhone / iPad 主屏幕',
+    safariTitle: 'MacBook Safari 浏览器',
+    safariStep1: '点击顶部菜单栏「文件」→「添加到程序坞…」（或点击 Safari 工具栏「分享」图标 →「添加到程序坞」）。',
+    safariStep2: '点击「添加」，即可生成独立窗口运行的 Mac 应用。',
+    chromeTitle: 'MacBook / 电脑 Chrome 或 Edge',
+    chromeStep1: '点击地址栏右侧的「安装」图标，或点击右上角菜单 ⋮ →「投放、保存和分享」→「安装圣经之音…」。',
+    chromeStep2: '确认「安装」后即可从「应用程序」或程序坞启动。',
+    desktopTip: '提示：安装后可从「应用程序」或 Chrome 应用文件夹创建替身（Alias）放到 Mac 桌面上。',
+    iframeNotice: '当前处于内嵌预览框中，请先在新标签页直接打开本应用再进行安装。',
+    openNewTab: '在新标签页打开以安装',
   },
   unseeded: {
     referenceTopic: '章节索引',
