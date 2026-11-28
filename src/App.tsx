@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AudioPlayer } from './components/AudioPlayer';
 import { BibleSidebar } from './components/BibleSidebar';
 import { Header } from './components/Header';
@@ -10,11 +10,9 @@ import { SearchBar } from './components/SearchBar';
 import {
   DEFAULT_UI_LANGS,
   DEVOTIONAL_LENGTHS,
-  NARRATOR_VOICES,
   SUPPORTED_LANGUAGES,
   getBookBySlug,
   getBookName,
-  getComplementaryVoice,
   getLanguageOption,
 } from './data/bibleBooks';
 import { getUiStrings } from './data/uiStrings';
@@ -28,12 +26,18 @@ import {
 import {
   AudioSegment,
   DevotionalLength,
-  NarratorVoice,
   ReaderFontSize,
   ReadingHistoryItem,
   SupportedLang,
   VerseBookmark,
 } from './types/scripture';
+import {
+  getNaturalVoicesForLanguage,
+  pickNaturalOsVoice,
+  readSavedOsVoices,
+  saveOsVoiceForLocale,
+  useSpeechVoices,
+} from './utils/speechVoices';
 
 const HISTORY_STORAGE_KEY = 'scripture_voice_history_v1';
 const BOOKMARKS_STORAGE_KEY = 'scripture_voice_bookmarks_v1';
@@ -42,7 +46,6 @@ const PREFS_STORAGE_KEY = 'scripture_voice_prefs_v1';
 interface StoredPrefs {
   lang?: SupportedLang;
   devotionalLength?: DevotionalLength;
-  voice?: NarratorVoice;
   fontSize?: ReaderFontSize;
 }
 
@@ -105,13 +108,43 @@ export default function App() {
       ? initialPrefs.devotionalLength!
       : 5
   );
-  const [voice, setVoice] = useState<NarratorVoice>(() =>
-    NARRATOR_VOICES.some((v) => v.name === initialPrefs.voice) ? initialPrefs.voice! : 'Fenrir'
-  );
   const [fontSize, setFontSize] = useState<ReaderFontSize>(() =>
     initialPrefs.fontSize === 'sm' || initialPrefs.fontSize === 'md' || initialPrefs.fontSize === 'lg'
       ? initialPrefs.fontSize
       : 'md'
+  );
+  const { voices: allOsVoices } = useSpeechVoices();
+  const [savedVoiceByLocale, setSavedVoiceByLocale] = useState<Record<string, string>>(() =>
+    readSavedOsVoices()
+  );
+
+  const activeBcp47 = getLanguageOption(lang).bcp47;
+  const matchingOsVoices = useMemo(
+    () => getNaturalVoicesForLanguage(allOsVoices, activeBcp47),
+    [allOsVoices, activeBcp47]
+  );
+  const rawSavedVoiceURI = savedVoiceByLocale[activeBcp47] ?? '';
+  const selectedVoiceURI = matchingOsVoices.some((v) => v.voiceURI === rawSavedVoiceURI)
+    ? rawSavedVoiceURI
+    : '';
+  const autoOsVoice = useMemo(
+    () => pickNaturalOsVoice(allOsVoices, activeBcp47),
+    [allOsVoices, activeBcp47]
+  );
+  const activeOsVoice = useMemo(
+    () => pickNaturalOsVoice(allOsVoices, activeBcp47, selectedVoiceURI),
+    [allOsVoices, activeBcp47, selectedVoiceURI]
+  );
+  const activeVoiceLabel =
+    activeOsVoice?.name ?? (lang.startsWith('zh') ? '系统默认' : 'System Default');
+  const activeVoiceLabelRef = useRef<string>(activeVoiceLabel);
+  activeVoiceLabelRef.current = activeVoiceLabel;
+
+  const handleVoiceURIChange = useCallback(
+    (voiceURI: string) => {
+      setSavedVoiceByLocale((prev) => saveOsVoiceForLocale(prev, activeBcp47, voiceURI));
+    },
+    [activeBcp47]
   );
 
   useEffect(() => {
@@ -144,12 +177,12 @@ export default function App() {
     try {
       localStorage.setItem(
         PREFS_STORAGE_KEY,
-        JSON.stringify({ lang, devotionalLength, voice, fontSize })
+        JSON.stringify({ lang, devotionalLength, fontSize })
       );
     } catch {
       // Ignore storage quota errors
     }
-  }, [lang, devotionalLength, voice, fontSize]);
+  }, [lang, devotionalLength, fontSize]);
 
   const [activeBookSlug, setActiveBookSlug] = useState<string>('psalm');
   const [activeChapter, setActiveChapter] = useState<number>(23);
@@ -240,11 +273,10 @@ export default function App() {
     (
       loadedBundle: LoadedChapterBundle,
       activeLang: SupportedLang,
-      primaryVoice: NarratorVoice,
+      voiceLabel: string,
       len: DevotionalLength
     ): AudioSegment[] => {
       const langOpt = getLanguageOption(activeLang);
-      const compVoice = getComplementaryVoice(primaryVoice);
       const verses = loadedBundle.scripture.verses;
       const dev =
         loadedBundle.devotional.variants[String(len)] ??
@@ -289,10 +321,10 @@ export default function App() {
         undefined,
       ];
       const labels = [
-        ui.scripturePartLabel(1, primaryVoice),
-        ui.scripturePartLabel(2, primaryVoice),
-        ui.devotionalPartLabel(compVoice, false),
-        ui.devotionalPartLabel(compVoice, true),
+        ui.scripturePartLabel(1, voiceLabel),
+        ui.scripturePartLabel(2, voiceLabel),
+        ui.devotionalPartLabel(voiceLabel, false),
+        ui.devotionalPartLabel(voiceLabel, true),
       ];
 
       return linesByPart.map((lines, idx) => {
@@ -306,7 +338,7 @@ export default function App() {
           part: idx + 1,
           totalParts: 4,
           role: idx < 2 ? 'scripture' : 'devotional',
-          voice: idx < 2 ? primaryVoice : compVoice,
+          voice: voiceLabel,
           label: labels[idx],
           durationSec: estSec,
           bcp47: langOpt.bcp47,
@@ -319,7 +351,7 @@ export default function App() {
     []
   );
 
-  // If language, voice, or chapter changes while audio is open, refresh or close cleanly
+  // If language, devotional length, or chapter changes while audio is open, refresh segments cleanly
   useEffect(() => {
     if (!activeAudio || !bundle) return;
     if (
@@ -334,6 +366,7 @@ export default function App() {
     const langOpt = getLanguageOption(lang);
     const ui = getUiStrings(lang);
     const ref = `${bundle.scripture.bookName} ${bundle.scripture.chapter}`;
+    const currentVoiceLabel = activeVoiceLabelRef.current;
 
     if (isLyricsMode) {
       const lyr = bundle.lyrics;
@@ -343,8 +376,8 @@ export default function App() {
         segments: [
           {
             ...activeAudio.segments[0],
-            voice,
-            label: ui.lyricsReadingLabel(voice),
+            voice: currentVoiceLabel,
+            label: ui.lyricsReadingLabel(currentVoiceLabel),
             bcp47: langOpt.bcp47,
             lang,
             spokenLines,
@@ -354,10 +387,10 @@ export default function App() {
     } else {
       setActiveAudio({
         title: `${ref} · ${ui.podcastLabel}`,
-        segments: buildLiveSegments(bundle, lang, voice, devotionalLength),
+        segments: buildLiveSegments(bundle, lang, currentVoiceLabel, devotionalLength),
       });
     }
-  }, [lang, voice, devotionalLength, bundle, activeBookSlug, activeChapter, buildLiveSegments]);
+  }, [lang, devotionalLength, bundle, activeBookSlug, activeChapter, buildLiveSegments]);
 
   const navigateToChapter = (bookSlug: string, chapter: number, verse?: number) => {
     setActiveBookSlug(bookSlug);
@@ -373,7 +406,7 @@ export default function App() {
     const ui = getUiStrings(lang);
     const book = getBookBySlug(activeBookSlug);
     const ref = `${book ? getBookName(book, lang) : activeBookSlug} ${activeChapter}`;
-    const segments = buildLiveSegments(bundle, lang, voice, devotionalLength);
+    const segments = buildLiveSegments(bundle, lang, activeVoiceLabel, devotionalLength);
     setActiveAudio({
       title: `${ref} · ${ui.podcastLabel}`,
       segments,
@@ -397,8 +430,8 @@ export default function App() {
           part: 1,
           totalParts: 1,
           role: 'lyrics',
-          voice,
-          label: ui.lyricsReadingLabel(voice),
+          voice: activeVoiceLabel,
+          label: ui.lyricsReadingLabel(activeVoiceLabel),
           durationSec: Math.max(4, Math.round(spokenLines.join('').length / 10)),
           bcp47: langOpt.bcp47,
           lang,
@@ -486,8 +519,10 @@ export default function App() {
         onLangChange={setLang}
         devotionalLength={devotionalLength}
         onLengthChange={setDevotionalLength}
-        voice={voice}
-        onVoiceChange={setVoice}
+        osVoices={matchingOsVoices}
+        selectedVoiceURI={selectedVoiceURI}
+        autoVoiceName={autoOsVoice?.name}
+        onVoiceURIChange={handleVoiceURIChange}
         isSidebarOpen={isDesktopSidebarOpen}
         onToggleDesktopSidebar={() => setIsDesktopSidebarOpen((v) => !v)}
         onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
@@ -583,7 +618,7 @@ export default function App() {
                 bundle={bundle}
                 isLoading={isLoading}
                 devotionalLength={devotionalLength}
-                voice={voice}
+                voice={activeVoiceLabel}
                 highlightVerse={highlightVerse}
                 activeSpokenVerse={spokenVerse}
                 fontSize={fontSize}
@@ -615,6 +650,8 @@ export default function App() {
           lang={lang}
           title={activeAudio.title}
           segments={activeAudio.segments}
+          selectedVoiceURI={selectedVoiceURI}
+          onVoiceURIChange={handleVoiceURIChange}
           onClose={() => {
             setActiveAudio(null);
             setSpokenVerse(undefined);

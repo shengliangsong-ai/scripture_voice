@@ -2,11 +2,10 @@ import { BookOpen, Clock, HelpCircle, Menu, PanelLeftClose, PanelLeftOpen } from
 import {
   DEFAULT_UI_LANGS,
   DEVOTIONAL_LENGTHS,
-  NARRATOR_VOICES,
   SUPPORTED_LANGUAGES,
 } from '../data/bibleBooks';
 import { getUiStrings } from '../data/uiStrings';
-import { DevotionalLength, NarratorVoice, SupportedLang } from '../types/scripture';
+import { DevotionalLength, SupportedLang } from '../types/scripture';
 import { PWAInstallButton } from './PWAInstallButton';
 
 interface HeaderProps {
@@ -15,8 +14,10 @@ interface HeaderProps {
   onLangChange: (lang: SupportedLang) => void;
   devotionalLength: DevotionalLength;
   onLengthChange: (len: DevotionalLength) => void;
-  voice: NarratorVoice;
-  onVoiceChange: (voice: NarratorVoice) => void;
+  osVoices: SpeechSynthesisVoice[];
+  selectedVoiceURI: string;
+  autoVoiceName?: string;
+  onVoiceURIChange: (voiceURI: string) => void;
   isSidebarOpen: boolean;
   onToggleDesktopSidebar: () => void;
   onOpenMobileSidebar: () => void;
@@ -31,8 +32,10 @@ export function Header({
   onLangChange,
   devotionalLength,
   onLengthChange,
-  voice,
-  onVoiceChange,
+  osVoices,
+  selectedVoiceURI,
+  autoVoiceName,
+  onVoiceURIChange,
   isSidebarOpen,
   onToggleDesktopSidebar,
   onOpenMobileSidebar,
@@ -44,6 +47,12 @@ export function Header({
   const visibleLanguages = SUPPORTED_LANGUAGES.filter(
     (opt) => availableLangs.includes(opt.code) || opt.code === lang
   );
+  const effectiveVoiceURI = osVoices.some((v) => v.voiceURI === selectedVoiceURI)
+    ? selectedVoiceURI
+    : '';
+  const autoVoiceLabel = autoVoiceName
+    ? `${ui.voicePickerAuto} · ${autoVoiceName}`
+    : ui.voicePickerAuto;
 
   return (
     <>
@@ -126,14 +135,15 @@ export function Header({
             <label className="flex items-center gap-1.5 text-xs text-bible-700 whitespace-nowrap">
               <span className="font-medium text-bible-500">{ui.narratorLabel}</span>
               <select
-                aria-label={ui.narratorLabel}
-                value={voice}
-                onChange={(e) => onVoiceChange(e.target.value as NarratorVoice)}
-                className="h-9 pl-2.5 pr-7 text-xs font-medium text-bible-900 bg-bible-50 border border-bible-200 rounded-md hover:border-bible-400 focus-visible:outline-2 focus-visible:outline-bible-700 transition-colors cursor-pointer"
+                aria-label={ui.voicePickerAria}
+                value={effectiveVoiceURI}
+                onChange={(e) => onVoiceURIChange(e.target.value)}
+                className="h-9 max-w-[200px] pl-2.5 pr-7 text-xs font-medium text-bible-900 bg-bible-50 border border-bible-200 rounded-md hover:border-bible-400 focus-visible:outline-2 focus-visible:outline-bible-700 transition-colors cursor-pointer truncate"
               >
-                {NARRATOR_VOICES.map((v) => (
-                  <option key={v.name} value={v.name}>
-                    {v.name} · {ui.voiceTimbres[v.name]}
+                <option value="">{autoVoiceLabel}</option>
+                {osVoices.map((v) => (
+                  <option key={v.voiceURI} value={v.voiceURI}>
+                    {v.name} ({v.lang})
                   </option>
                 ))}
               </select>
@@ -175,7 +185,7 @@ export function Header({
             aria-label={ui.languageLabel}
             value={lang}
             onChange={(e) => onLangChange(e.target.value as SupportedLang)}
-            className="flex-1 min-w-[140px] h-10 px-2.5 text-xs font-medium text-bible-900 bg-white border border-bible-200 rounded-md"
+            className="flex-1 min-w-[130px] h-10 px-2.5 text-xs font-medium text-bible-900 bg-white border border-bible-200 rounded-md"
           >
             {visibleLanguages.map((opt) => (
               <option key={opt.code} value={opt.code}>
@@ -198,14 +208,15 @@ export function Header({
           </select>
 
           <select
-            aria-label={ui.narratorLabel}
-            value={voice}
-            onChange={(e) => onVoiceChange(e.target.value as NarratorVoice)}
-            className="h-10 px-2.5 text-xs font-medium text-bible-900 bg-white border border-bible-200 rounded-md"
+            aria-label={ui.voicePickerAria}
+            value={effectiveVoiceURI}
+            onChange={(e) => onVoiceURIChange(e.target.value)}
+            className="flex-1 min-w-[140px] max-w-[220px] h-10 px-2.5 text-xs font-medium text-bible-900 bg-white border border-bible-200 rounded-md truncate"
           >
-            {NARRATOR_VOICES.map((v) => (
-              <option key={v.name} value={v.name}>
-                {v.name}
+            <option value="">{autoVoiceLabel}</option>
+            {osVoices.map((v) => (
+              <option key={v.voiceURI} value={v.voiceURI}>
+                {v.name} ({v.lang})
               </option>
             ))}
           </select>

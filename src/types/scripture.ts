@@ -91,7 +91,7 @@ export interface AudioSegment {
   part: number;
   totalParts: number;
   role: 'scripture' | 'devotional' | 'lyrics';
-  voice: NarratorVoice;
+  voice: string;
   label: string;
   durationSec: number;
   bcp47: string;

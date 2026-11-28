@@ -17,7 +17,7 @@ import { useEffect, useRef, useState } from 'react';
 import { getAdjacentChapter } from '../data/bibleBooks';
 import { getUiStrings } from '../data/uiStrings';
 import { LoadedChapterBundle } from '../services/offlineDataService';
-import { DevotionalLength, NarratorVoice, ReaderFontSize } from '../types/scripture';
+import { DevotionalLength, ReaderFontSize } from '../types/scripture';
 import {
   buildPlainTextPassage,
   copyRichPassageToClipboard,
@@ -28,7 +28,7 @@ interface PassageReaderProps {
   bundle: LoadedChapterBundle;
   isLoading: boolean;
   devotionalLength: DevotionalLength;
-  voice: NarratorVoice;
+  voice: string;
   highlightVerse?: number;
   activeSpokenVerse?: number;
   fontSize: ReaderFontSize;
