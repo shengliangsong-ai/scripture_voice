@@ -45,23 +45,24 @@ function getVoiceTuning(voiceName: NarratorVoice): {
   pitch: number;
   rate: number;
   preferFemale: boolean;
+  slot: number;
 } {
   switch (voiceName) {
     case 'Kore':
-      return { pitch: 1.03, rate: 0.96, preferFemale: true };
+      return { pitch: 1.02, rate: 0.98, preferFemale: true, slot: 0 };
     case 'Zephyr':
-      return { pitch: 1.07, rate: 0.95, preferFemale: true };
+      return { pitch: 1.24, rate: 0.93, preferFemale: true, slot: 1 };
     case 'Puck':
-      return { pitch: 1.01, rate: 1.0, preferFemale: false };
+      return { pitch: 1.14, rate: 1.05, preferFemale: false, slot: 2 };
     case 'Charon':
-      return { pitch: 0.88, rate: 0.91, preferFemale: false };
+      return { pitch: 0.72, rate: 0.87, preferFemale: false, slot: 1 };
     case 'Fenrir':
     default:
-      return { pitch: 0.94, rate: 0.94, preferFemale: false };
+      return { pitch: 0.86, rate: 0.94, preferFemale: false, slot: 0 };
   }
 }
 
-const OS_VOICE_STORAGE_KEY = 'scripture_voice_os_voice_v1';
+const OS_VOICE_STORAGE_KEY = 'scripture_voice_os_voice_v2';
 
 function readSavedOsVoices(): Record<string, string> {
   try {
@@ -77,7 +78,7 @@ function getMatchingLanguageVoices(
   bcp47: string
 ): SpeechSynthesisVoice[] {
   if (!availableVoices || availableVoices.length === 0) return [];
-  const targetLower = bcp47.toLowerCase();
+  const targetLower = bcp47.toLowerCase().replace('_', '-');
   const langPrefix = targetLower.split('-')[0];
   const exactMatches = availableVoices.filter(
     (v) => v.lang.toLowerCase().replace('_', '-') === targetLower
@@ -88,9 +89,87 @@ function getMatchingLanguageVoices(
   return exactMatches.length > 0 ? exactMatches : prefixMatches;
 }
 
-function scoreOsVoice(v: SpeechSynthesisVoice, bcp47: string, narrator: NarratorVoice): number {
-  const targetLower = bcp47.toLowerCase();
-  const { preferFemale } = getVoiceTuning(narrator);
+const FEMALE_VOICE_HINTS = [
+  'female',
+  'xiaoxiao',
+  'xiaoyi',
+  'xiaochen',
+  'xiaohan',
+  'xiaomeng',
+  'xiaomo',
+  'xiaoqiu',
+  'xiaorui',
+  'xiaoshuang',
+  'xiaoxuan',
+  'xiaoyan',
+  'xiaoyou',
+  'huihui',
+  'yaoyao',
+  'mei-jia',
+  'meijia',
+  'ting-ting',
+  'tingting',
+  'sin-ji',
+  'sinji',
+  'hsiaochen',
+  'hsiaoyu',
+  'samantha',
+  'aria',
+  'jenny',
+  'karen',
+  'ava',
+  'allison',
+  'susan',
+  'victoria',
+  'kathy',
+  'moira',
+  'tessa',
+  'flo',
+  'sandy',
+  'shelley',
+  'grandma',
+  'sonia',
+  'libby',
+  'nicky',
+];
+
+const MALE_VOICE_HINTS = [
+  'male',
+  'yunxi',
+  'yunjian',
+  'yunyang',
+  'yunze',
+  'yunfeng',
+  'yunhao',
+  'yunjhe',
+  'kangkang',
+  'li-mu',
+  'limu',
+  'daniel',
+  'guy',
+  'alex',
+  'eddy',
+  'reed',
+  'rocko',
+  'grandpa',
+  'aaron',
+  'arthur',
+  'oliver',
+  'ryan',
+  'fred',
+  'ralph',
+  'albert',
+];
+
+function classifyVoiceGender(v: SpeechSynthesisVoice): 'female' | 'male' | 'unknown' {
+  const name = v.name.toLowerCase();
+  if (FEMALE_VOICE_HINTS.some((hint) => name.includes(hint))) return 'female';
+  if (MALE_VOICE_HINTS.some((hint) => name.includes(hint))) return 'male';
+  return 'unknown';
+}
+
+function scoreOsVoiceBase(v: SpeechSynthesisVoice, bcp47: string): number {
+  const targetLower = bcp47.toLowerCase().replace('_', '-');
   const name = v.name.toLowerCase();
   let score = 0;
 
@@ -110,41 +189,26 @@ function scoreOsVoice(v: SpeechSynthesisVoice, bcp47: string, narrator: Narrator
   if (
     name.includes('xiaoxiao') ||
     name.includes('yunxi') ||
+    name.includes('meijia') ||
     name.includes('mei-jia') ||
+    name.includes('tingting') ||
     name.includes('ting-ting') ||
-    name.includes('hsiaochen') ||
-    name.includes('yunjhe') ||
     name.includes('samantha') ||
     name.includes('daniel') ||
     name.includes('aria') ||
     name.includes('guy') ||
-    name.includes('jenny')
+    name.includes('jenny') ||
+    name.includes('eddy') ||
+    name.includes('flo') ||
+    name.includes('reed') ||
+    name.includes('shelley')
   ) {
     score += 20;
   }
-
-  const looksFemale =
-    name.includes('female') ||
-    name.includes('xiaoxiao') ||
-    name.includes('mei-jia') ||
-    name.includes('ting-ting') ||
-    name.includes('hsiaochen') ||
-    name.includes('samantha') ||
-    name.includes('aria') ||
-    name.includes('jenny') ||
-    name.includes('karen') ||
-    name.includes('ava');
-
-  const looksMale =
-    name.includes('male') ||
-    name.includes('yunxi') ||
-    name.includes('yunjhe') ||
-    name.includes('daniel') ||
-    name.includes('guy') ||
-    name.includes('alex');
-
-  if (preferFemale && looksFemale) score += 8;
-  if (!preferFemale && looksMale) score += 8;
+  // Deprioritize novelty voices slightly unless needed for distinct persona slots
+  if (name.includes('grandma') || name.includes('grandpa') || name.includes('rocko')) {
+    score -= 5;
+  }
   return score;
 }
 
@@ -162,10 +226,42 @@ function pickHumanFriendlyVoice(
     if (manual) return manual;
   }
 
-  return (
-    [...pool].sort((a, b) => scoreOsVoice(b, bcp47, narrator) - scoreOsVoice(a, bcp47, narrator))[0] ??
-    pool[0]
+  const sortedPool = [...pool].sort(
+    (a, b) => scoreOsVoiceBase(b, bcp47) - scoreOsVoiceBase(a, bcp47)
   );
+  const { preferFemale, slot } = getVoiceTuning(narrator);
+  const femalePool = sortedPool.filter((v) => classifyVoiceGender(v) === 'female');
+  const malePool = sortedPool.filter((v) => classifyVoiceGender(v) === 'male');
+
+  if (preferFemale) {
+    if (femalePool.length > slot) return femalePool[slot];
+    if (femalePool.length > 0 && sortedPool.length > femalePool.length) {
+      const nonMale = sortedPool.filter((v) => classifyVoiceGender(v) !== 'male');
+      if (nonMale.length > slot) return nonMale[slot];
+    }
+    if (femalePool.length > 0) {
+      return femalePool[slot % femalePool.length];
+    }
+  } else {
+    if (malePool.length > slot) return malePool[slot];
+    if (malePool.length > 0 && sortedPool.length > malePool.length) {
+      const nonFemale = sortedPool.filter((v) => classifyVoiceGender(v) !== 'female');
+      if (nonFemale.length > slot) return nonFemale[slot];
+    }
+    if (malePool.length > 0) {
+      return malePool[slot % malePool.length];
+    }
+  }
+
+  // Spread personas cleanly across whatever OS voices exist when gender metadata is absent
+  const globalOrder: Record<NarratorVoice, number> = {
+    Fenrir: 0,
+    Kore: 1,
+    Charon: 2,
+    Zephyr: 3,
+    Puck: 4,
+  };
+  return sortedPool[globalOrder[narrator] % sortedPool.length] ?? sortedPool[0];
 }
 
 interface SpokenChunkItem {
@@ -218,16 +314,21 @@ export function AudioPlayer({
   const [audioError, setAudioError] = useState<string | null>(null);
 
   const activeSegment = segments[activeIndex];
-  const selectedVoiceURI = activeSegment ? savedVoiceByLang[activeSegment.bcp47] ?? '' : '';
+  const voiceKey = activeSegment ? `${activeSegment.bcp47}:${activeSegment.voice}` : '';
+  const selectedVoiceURI = voiceKey ? savedVoiceByLang[voiceKey] ?? '' : '';
 
   const matchingOsVoices = useMemo(() => {
     if (!activeSegment || !supportsSpeech) return [];
     const pool = getMatchingLanguageVoices(availableVoices, activeSegment.bcp47);
     return [...pool].sort(
       (a, b) =>
-        scoreOsVoice(b, activeSegment.bcp47, activeSegment.voice) -
-        scoreOsVoice(a, activeSegment.bcp47, activeSegment.voice)
+        scoreOsVoiceBase(b, activeSegment.bcp47) - scoreOsVoiceBase(a, activeSegment.bcp47)
     );
+  }, [activeSegment, availableVoices, supportsSpeech]);
+
+  const autoMatchedVoice = useMemo(() => {
+    if (!activeSegment || !supportsSpeech) return null;
+    return pickHumanFriendlyVoice(availableVoices, activeSegment.bcp47, activeSegment.voice);
   }, [activeSegment, availableVoices, supportsSpeech]);
 
   const spokenChunks = useMemo(() => buildSpokenChunks(activeSegment), [activeSegment]);
@@ -285,7 +386,7 @@ export function AudioPlayer({
 
       const voicesNow =
         availableVoices.length > 0 ? availableVoices : window.speechSynthesis.getVoices();
-      const manualURI = savedVoiceByLang[seg.bcp47];
+      const manualURI = savedVoiceByLang[`${seg.bcp47}:${seg.voice}`];
       const matchedVoice = pickHumanFriendlyVoice(voicesNow, seg.bcp47, seg.voice, manualURI);
       if (matchedVoice) {
         utterance.voice = matchedVoice;
@@ -402,11 +503,12 @@ export function AudioPlayer({
   const currentSpokenLine = spokenChunks[lineIndex]?.text ?? '';
 
   const handleOsVoiceChange = (voiceURI: string) => {
+    if (!voiceKey) return;
     const next = { ...savedVoiceByLang };
     if (voiceURI) {
-      next[activeSegment.bcp47] = voiceURI;
+      next[voiceKey] = voiceURI;
     } else {
-      delete next[activeSegment.bcp47];
+      delete next[voiceKey];
     }
     setSavedVoiceByLang(next);
     try {
@@ -554,7 +656,9 @@ export function AudioPlayer({
               onChange={(e) => handleOsVoiceChange(e.target.value)}
               className="h-8 max-w-[140px] sm:max-w-[175px] px-2 text-[11px] font-medium text-bible-800 bg-bible-50 border border-bible-200 hover:bg-bible-100 rounded-md transition-colors truncate cursor-pointer"
             >
-              <option value="">{ui.voicePickerAuto}</option>
+              <option value="">
+                {autoMatchedVoice ? `${ui.voicePickerAuto} · ${autoMatchedVoice.name}` : ui.voicePickerAuto}
+              </option>
               {matchingOsVoices.map((v) => (
                 <option key={v.voiceURI} value={v.voiceURI}>
                   {v.name} ({v.lang})
