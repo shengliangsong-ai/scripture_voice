@@ -376,7 +376,7 @@ const EN_STRINGS: UiStrings = {
 };
 
 const ZH_TW_STRINGS: UiStrings = {
-  appName: '聖經之聲',
+  appName: '聖經之音',
   languageLabel: '語言',
   lengthLabel: '篇幅',
   narratorLabel: '朗讀',
@@ -505,8 +505,8 @@ const ZH_TW_STRINGS: UiStrings = {
     john_3: '古典油畫研經圖版 — 夜色庭院中的燈火（約翰福音 3）',
   },
   howItWorks: {
-    title: '聖經之聲如何 100% 離線運作',
-    leadBeforeBold: '聖經之聲全程採用',
+    title: '聖經之音如何 100% 離線運作',
+    leadBeforeBold: '聖經之音全程採用',
     leadBold: '本地公版聖經文本與建置時期預先產生的靜態資料包',
     leadAfterBold: '——執行期間完全不呼叫任何雲端大語言模型（LLM）、線上翻譯或生成式 API。',
     cards: [
@@ -587,7 +587,7 @@ const ZH_TW_STRINGS: UiStrings = {
 };
 
 const ZH_CN_STRINGS: UiStrings = {
-  appName: '圣经之声',
+  appName: '圣经之音',
   languageLabel: '语言',
   lengthLabel: '篇幅',
   narratorLabel: '朗读',
@@ -716,8 +716,8 @@ const ZH_CN_STRINGS: UiStrings = {
     john_3: '古典油画研经图版 — 夜色庭院中的灯火（约翰福音 3）',
   },
   howItWorks: {
-    title: '圣经之声如何 100% 离线运作',
-    leadBeforeBold: '圣经之声全程采用',
+    title: '圣经之音如何 100% 离线运作',
+    leadBeforeBold: '圣经之音全程采用',
     leadBold: '本地公版圣经文本与构建时期预先生成的静态数据包',
     leadAfterBold: '——运行期间完全不调用任何云端大语言模型（LLM）、在线翻译或生成式 API。',
     cards: [
